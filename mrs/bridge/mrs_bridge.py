@@ -21,6 +21,14 @@ except ImportError:
     VerificationLevel = None
     VerificationStatus = None
 
+# immudb ledger (optional — MRS operates without it)
+try:
+    from ledger.immudb_client import MRSLedger
+    LEDGER_AVAILABLE = True
+except ImportError:
+    MRSLedger = None  # type: ignore[misc,assignment]
+    LEDGER_AVAILABLE = False
+
 
 class ConcordanceError(RuntimeError):
     """
@@ -50,7 +58,7 @@ class MRSBridge:
     - Dual logging (JSON + text)
     """
 
-    def __init__(self, prolog_path: str = "prolog/", memory_path: str = "memory/"):
+    def __init__(self, prolog_path: str = "prolog/", memory_path: str = "memory/", ledger: Optional["MRSLedger"] = None):
         self.prolog = Prolog()
         
         # Get MRS root directory (where this file lives)
@@ -64,6 +72,9 @@ class MRSBridge:
         self.reasoning_log_path = self.memory_path / "reasoning_log.json"
         self.bridge_log_path = self.memory_path / "bridge.log"
         self.outcomes_log_path = self.memory_path / "outcomes.json"
+
+        # immudb ledger (optional)
+        self.ledger = ledger
 
         # Action ID counter for generating unique IDs
         self._action_counter = 0
@@ -493,6 +504,7 @@ class MRSBridge:
             "codex_loaded": False,
             "concordance_verified": self._concordance_verified,
             "concordance_predicate_count": self._concordance_predicate_count,
+            "ledger_available": self.ledger.is_available() if self.ledger is not None else False,
             "error": None
         }
 
@@ -899,6 +911,17 @@ class MRSBridge:
             self.logger.debug("  ✓ Successfully wrote reasoning log")
         except Exception as e:
             self.logger.error(f"Failed to write reasoning log: {e}", exc_info=True)
+
+        # Seal in immudb (optional — non-blocking, never raises)
+        if self.ledger is not None:
+            try:
+                seal_result = self.ledger.seal(log_entry)
+                if seal_result.get("verified"):
+                    self.logger.debug(
+                        f"  Ledger sealed: {seal_result['key']} tx={seal_result['tx']}"
+                    )
+            except Exception as e:
+                self.logger.warning(f"Ledger seal skipped (non-fatal): {e}")
 
     def get_reasoning_history(
         self,
