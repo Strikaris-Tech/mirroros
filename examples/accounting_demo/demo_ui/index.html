@@ -53,6 +53,17 @@
       font-size: 0.75rem;
     }
 
+    .table-scroll {
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid #1e2433;
+      border-radius: 8px;
+    }
+
+    .table-scroll::-webkit-scrollbar { width: 6px; }
+    .table-scroll::-webkit-scrollbar-track { background: #0b0e16; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #1e2433; border-radius: 3px; }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -60,6 +71,9 @@
     }
 
     thead th {
+      position: sticky;
+      top: 0;
+      background: #0f1117;
       text-align: left;
       padding: 0.6rem 1rem;
       font-size: 0.7rem;
@@ -68,6 +82,7 @@
       text-transform: uppercase;
       color: #475569;
       border-bottom: 1px solid #1e2433;
+      z-index: 1;
     }
 
     tbody tr {
@@ -193,6 +208,7 @@
 
 <h2>Pending Invoices</h2>
 
+<div class="table-scroll">
 <table id="invoice-table">
   <thead>
     <tr>
@@ -207,6 +223,7 @@
     <!-- Populated by /api/invoices -->
   </tbody>
 </table>
+</div>
 
 <div id="verdict-panel">
   <h2>MRS Decision Log</h2>

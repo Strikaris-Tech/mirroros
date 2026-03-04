@@ -39,10 +39,23 @@ import uvicorn
 # ── Invoice state ─────────────────────────────────────────────────────────────
 
 _INVOICE_DEFAULTS: dict[str, dict[str, Any]] = {
-    "inv_001": {"vendor": "acme_corp",        "vendor_name": "Acme Corp",           "amount": 200,   "status": "pending"},
-    "inv_002": {"vendor": "trusted_supplier", "vendor_name": "Trusted Supplier Inc","amount": 25000, "status": "pending"},
-    "inv_003": {"vendor": "unknown_co",       "vendor_name": "Unknown Co",          "amount": 500,   "status": "pending"},
-    "inv_004": {"vendor": "acme_corp",        "vendor_name": "Acme Corp",           "amount": 950,   "status": "pending"},
+    # ── Invoices exercised by the 6-pulse demo ─────────────────────────────
+    "inv_001": {"vendor": "acme_corp",        "vendor_name": "Acme Corp",           "amount":    200, "status": "pending"},
+    "inv_002": {"vendor": "trusted_supplier", "vendor_name": "Trusted Supplier Inc","amount":  25000, "status": "pending"},
+    "inv_003": {"vendor": "unknown_co",       "vendor_name": "Unknown Co",          "amount":    500, "status": "pending"},
+    "inv_004": {"vendor": "city_utilities",   "vendor_name": "City Utilities",      "amount":    950, "status": "pending"},
+    # ── Remaining AP queue (pending — show the real backlog) ───────────────
+    "inv_005": {"vendor": "acme_corp",        "vendor_name": "Acme Corp",           "amount":    450, "status": "pending"},
+    "inv_006": {"vendor": "global_parts_ltd", "vendor_name": "Global Parts Ltd",    "amount":   1850, "status": "pending"},
+    "inv_007": {"vendor": "apex_consulting",  "vendor_name": "Apex Consulting",     "amount":   3200, "status": "pending"},
+    "inv_008": {"vendor": "trusted_supplier", "vendor_name": "Trusted Supplier Inc","amount":    780, "status": "pending"},
+    "inv_009": {"vendor": "city_utilities",   "vendor_name": "City Utilities",      "amount":    125, "status": "pending"},
+    "inv_010": {"vendor": "unknown_co",       "vendor_name": "Unknown Co",          "amount":   2200, "status": "pending"},
+    "inv_011": {"vendor": "apex_consulting",  "vendor_name": "Apex Consulting",     "amount":  62000, "status": "pending"},
+    "inv_012": {"vendor": "global_parts_ltd", "vendor_name": "Global Parts Ltd",    "amount":    560, "status": "pending"},
+    "inv_013": {"vendor": "acme_corp",        "vendor_name": "Acme Corp",           "amount":   8900, "status": "pending"},
+    "inv_014": {"vendor": "trusted_supplier", "vendor_name": "Trusted Supplier Inc","amount":    450, "status": "pending"},
+    "inv_015": {"vendor": "city_utilities",   "vendor_name": "City Utilities",      "amount":  11500, "status": "pending"},
 }
 
 def _fresh_invoices() -> dict[str, dict[str, Any]]:

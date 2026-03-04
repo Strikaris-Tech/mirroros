@@ -33,6 +33,8 @@ approval_limit(auditor, 50000).
 vendor_verified(acme_corp).
 vendor_verified(trusted_supplier).
 vendor_verified(city_utilities).
+vendor_verified(global_parts_ltd).
+vendor_verified(apex_consulting).
 
 % ── INVOICE → VENDOR MAPPING ─────────────────────────────────────────────────
 % invoice_vendor(+InvoiceId, -VendorId)
@@ -43,6 +45,17 @@ invoice_vendor(inv_001, acme_corp).
 invoice_vendor(inv_002, trusted_supplier).
 invoice_vendor(inv_003, unknown_co).
 invoice_vendor(inv_004, city_utilities).
+invoice_vendor(inv_005, acme_corp).
+invoice_vendor(inv_006, global_parts_ltd).
+invoice_vendor(inv_007, apex_consulting).
+invoice_vendor(inv_008, trusted_supplier).
+invoice_vendor(inv_009, city_utilities).
+invoice_vendor(inv_010, unknown_co).
+invoice_vendor(inv_011, apex_consulting).
+invoice_vendor(inv_012, global_parts_ltd).
+invoice_vendor(inv_013, acme_corp).
+invoice_vendor(inv_014, trusted_supplier).
+invoice_vendor(inv_015, city_utilities).
 
 % ── POLICY VIOLATION PREDICATES (with reasons) ──────────────────────────────
 % violates_accounting_policy(+Agent, +Action, -Reason)
