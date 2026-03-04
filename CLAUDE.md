@@ -47,6 +47,8 @@ docs/           ← Architecture and reference docs
 - Do not write to `memory/` directly — use `MRSBridge` or `DatalogBridge`.
 - Do not introduce external dependencies without discussion.
 - Do not commit API keys, tokens, or production credentials.
+- Do not add `Co-Authored-By` or AI attribution lines to commit messages.
+  MirrorOS is a human-led project; keep the git history clean for contributors.
 
 ## Quick Commands
 
