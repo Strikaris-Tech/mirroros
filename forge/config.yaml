@@ -1,0 +1,41 @@
+# Forge Configuration — MirrorOS Demo
+# Override this file for your deployment. Never commit API keys here.
+
+api:
+  host: "0.0.0.0"
+  port: 8765
+  cors_origins: ["*"]
+
+# ── Agents ─────────────────────────────────────────────────────────────────
+# Each agent entry maps to files in agents/<name>/
+agents:
+  ledgerlark:
+    display_name: "LedgerLark"
+    role: "Accounting Mirror"
+    config_path: "agents/ledgerlark/config.json"
+    prompt_template_path: "agents/ledgerlark/prompt.md"
+    backend: "ollama"           # swap to "openrouter" with OPENROUTER_API_KEY
+    model: "llama3.2"
+    temperature: 0.3
+    max_tokens: 2000
+    tool_calling: false
+
+# ── Backends ────────────────────────────────────────────────────────────────
+backends:
+  ollama:
+    base_url: "http://localhost:11434"
+    models:
+      - "llama3.2"
+
+  openrouter:
+    base_url: "https://openrouter.ai/api/v1"
+    api_key_env: "OPENROUTER_API_KEY"  # set in environment, not here
+
+# ── MRS ─────────────────────────────────────────────────────────────────────
+mrs:
+  prolog_files:
+    - "mrs/prolog/Codex_Laws.pl"
+    - "mrs/prolog/Agent_Rules.pl"
+    - "mrs/prolog/concordance.pl"
+  memory_path: "mrs/memory"
+  reasoning_log: "mrs/memory/reasoning_log.json"

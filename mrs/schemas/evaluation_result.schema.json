@@ -1,0 +1,288 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mirroros.dev/schemas/evaluation_result.schema.json",
+  "title": "Evaluation Result",
+  "description": "Schema for self-edit evaluation results in MRS",
+  "type": "object",
+  "required": [
+    "evaluation_id",
+    "proposal_id",
+    "timestamp",
+    "status",
+    "recommendation"
+  ],
+  "properties": {
+    "evaluation_id": {
+      "type": "string",
+      "pattern": "^eval_[0-9]{8}_[0-9]{3}$",
+      "description": "Unique evaluation identifier (format: eval_YYYYMMDD_NNN)"
+    },
+    "proposal_id": {
+      "type": "string",
+      "pattern": "^edit_[0-9]{8}_[0-9]{3}$",
+      "description": "ID of proposal being evaluated"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of evaluation completion"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "completed",
+        "failed",
+        "partial",
+        "timeout"
+      ],
+      "description": "Evaluation execution status"
+    },
+    "recommendation": {
+      "type": "string",
+      "enum": [
+        "ACCEPT",
+        "REJECT",
+        "NEEDS_REVIEW",
+        "NEEDS_REFINEMENT"
+      ],
+      "description": "Final recommendation based on evaluation"
+    },
+    "overall_score": {
+      "type": "number",
+      "minimum": -1.0,
+      "maximum": 1.0,
+      "description": "Overall improvement score (-1.0 = worse, 0.0 = no change, 1.0 = perfect improvement)"
+    },
+    "benchmark_results": {
+      "type": "object",
+      "properties": {
+        "codex_compliance": {
+          "type": "object",
+          "properties": {
+            "baseline_violations": {"type": "integer"},
+            "new_violations": {"type": "integer"},
+            "delta": {"type": "integer"},
+            "test_cases_passed": {"type": "integer"},
+            "test_cases_failed": {"type": "integer"}
+          },
+          "description": "Codex law compliance testing"
+        },
+        "inference_accuracy": {
+          "type": "object",
+          "properties": {
+            "baseline_accuracy": {"type": "number"},
+            "new_accuracy": {"type": "number"},
+            "delta": {"type": "number"},
+            "test_case_count": {"type": "integer"}
+          },
+          "description": "Inference accuracy on test cases"
+        },
+        "consistency_check": {
+          "type": "object",
+          "properties": {
+            "contradictions_detected": {"type": "integer"},
+            "consistency_score": {"type": "number"},
+            "issues": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          },
+          "description": "Logical consistency verification"
+        },
+        "historical_failure_resolution": {
+          "type": "object",
+          "properties": {
+            "failures_addressed": {"type": "integer"},
+            "failures_resolved": {"type": "integer"},
+            "resolution_rate": {"type": "number"},
+            "details": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "outcome_id": {"type": "string"},
+                  "resolved": {"type": "boolean"},
+                  "explanation": {"type": "string"}
+                }
+              }
+            }
+          },
+          "description": "How well edit addresses historical failures"
+        }
+      },
+      "description": "Results from benchmark test suite"
+    },
+    "regressions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["test_case", "severity"],
+        "properties": {
+          "test_case": {
+            "type": "string",
+            "description": "Test case identifier"
+          },
+          "test_type": {
+            "type": "string",
+            "enum": ["codex", "inference", "consistency", "performance"]
+          },
+          "baseline_score": {
+            "type": "number",
+            "description": "Score before edit"
+          },
+          "new_score": {
+            "type": "number",
+            "description": "Score after edit"
+          },
+          "delta": {
+            "type": "number",
+            "description": "Change in score (negative = regression)"
+          },
+          "severity": {
+            "type": "string",
+            "enum": ["minor", "moderate", "major", "critical"],
+            "description": "Severity of regression"
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Why this regression occurred"
+          }
+        }
+      },
+      "description": "Detected performance regressions"
+    },
+    "improvements": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "area": {
+            "type": "string",
+            "description": "Area of improvement"
+          },
+          "metric": {
+            "type": "string",
+            "description": "Metric that improved"
+          },
+          "baseline": {"type": "number"},
+          "new_value": {"type": "number"},
+          "improvement_percentage": {"type": "number"},
+          "significance": {
+            "type": "string",
+            "enum": ["minor", "moderate", "major", "breakthrough"]
+          }
+        }
+      },
+      "description": "Documented improvements"
+    },
+    "side_effects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "effect_type": {
+            "type": "string",
+            "description": "Type of side effect"
+          },
+          "description": {"type": "string"},
+          "severity": {
+            "type": "string",
+            "enum": ["negligible", "minor", "moderate", "severe"]
+          },
+          "acceptable": {"type": "boolean"}
+        }
+      },
+      "description": "Unintended side effects of the edit"
+    },
+    "performance_metrics": {
+      "type": "object",
+      "properties": {
+        "execution_time_ms": {
+          "type": "object",
+          "properties": {
+            "baseline": {"type": "number"},
+            "new": {"type": "number"},
+            "delta_percentage": {"type": "number"}
+          }
+        },
+        "memory_usage_kb": {
+          "type": "object",
+          "properties": {
+            "baseline": {"type": "number"},
+            "new": {"type": "number"},
+            "delta_percentage": {"type": "number"}
+          }
+        }
+      },
+      "description": "Performance impact measurements"
+    },
+    "detailed_report": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "Executive summary of evaluation"
+        },
+        "strengths": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Strengths of the proposed edit"
+        },
+        "weaknesses": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Weaknesses or concerns"
+        },
+        "risks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "risk": {"type": "string"},
+              "likelihood": {
+                "type": "string",
+                "enum": ["low", "medium", "high"]
+              },
+              "impact": {
+                "type": "string",
+                "enum": ["low", "medium", "high", "critical"]
+              },
+              "mitigation": {"type": "string"}
+            }
+          },
+          "description": "Identified risks and mitigations"
+        },
+        "recommendations": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Specific recommendations for improvement"
+        }
+      },
+      "description": "Detailed evaluation report"
+    },
+    "test_environment": {
+      "type": "object",
+      "properties": {
+        "prolog_version": {"type": "string"},
+        "z3_version": {"type": "string"},
+        "test_suite_version": {"type": "string"},
+        "isolated": {"type": "boolean"},
+        "test_data_hash": {"type": "string"}
+      },
+      "description": "Test environment information for reproducibility"
+    },
+    "evaluator_metadata": {
+      "type": "object",
+      "properties": {
+        "evaluator_version": {"type": "string"},
+        "evaluation_duration_seconds": {"type": "number"},
+        "test_cases_executed": {"type": "integer"},
+        "errors_encountered": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "description": "Metadata about evaluation process"
+    }
+  }
+}

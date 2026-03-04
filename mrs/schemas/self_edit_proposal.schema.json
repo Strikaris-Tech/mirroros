@@ -1,0 +1,202 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mirroros.dev/schemas/self_edit_proposal.schema.json",
+  "title": "Self-Edit Proposal",
+  "description": "Schema for agent-proposed self-edits in MRS Redprint V2",
+  "type": "object",
+  "required": [
+    "proposal_id",
+    "timestamp",
+    "agent",
+    "proposal_type",
+    "current_state",
+    "proposed_state",
+    "evidence",
+    "justification",
+    "status"
+  ],
+  "properties": {
+    "proposal_id": {
+      "type": "string",
+      "pattern": "^edit_[0-9]{8}_[0-9]{3}$",
+      "description": "Unique proposal identifier (format: edit_YYYYMMDD_NNN)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of proposal creation"
+    },
+    "agent": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Name of agent proposing the edit"
+    },
+    "proposal_type": {
+      "type": "string",
+      "enum": [
+        "belief_revision",
+        "rule_addition",
+        "rule_modification",
+        "pattern_learning",
+        "parameter_tuning"
+      ],
+      "description": "Type of self-edit being proposed"
+    },
+    "current_state": {
+      "type": "object",
+      "required": ["content", "belief_id"],
+      "properties": {
+        "belief_id": {
+          "type": "string",
+          "description": "ID of current belief being modified (null for new beliefs)"
+        },
+        "content": {
+          "type": "string",
+          "description": "Current belief/rule content in Prolog syntax"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Version number of current belief"
+        }
+      },
+      "description": "Current state before proposed change"
+    },
+    "proposed_state": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "Proposed new belief/rule content in Prolog syntax"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Technical explanation of the change"
+        }
+      },
+      "description": "Proposed state after change"
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^outcome_[0-9]{8}_[0-9]{3}$"
+      },
+      "minItems": 1,
+      "description": "List of outcome_ids supporting this proposal"
+    },
+    "justification": {
+      "type": "string",
+      "minLength": 10,
+      "description": "Human-readable explanation of why this edit is needed"
+    },
+    "confidence": {
+      "type": "number",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Confidence score for this proposal (0.0-1.0)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_verification",
+        "prolog_validated",
+        "z3_verified",
+        "evaluation_pending",
+        "evaluation_passed",
+        "evaluation_failed",
+        "accepted",
+        "rejected"
+      ],
+      "description": "Current status in verification pipeline"
+    },
+    "verification_results": {
+      "type": "object",
+      "properties": {
+        "prolog_validation": {
+          "type": "object",
+          "properties": {
+            "valid": {"type": "boolean"},
+            "timestamp": {"type": "string", "format": "date-time"},
+            "errors": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "codex_compliance": {
+          "type": "object",
+          "properties": {
+            "compliant": {"type": "boolean"},
+            "timestamp": {"type": "string", "format": "date-time"},
+            "violations": {
+              "type": "array",
+              "items": {"type": "string"}
+            }
+          }
+        },
+        "z3_verification": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": ["VALID", "INVALID", "UNKNOWN", "TIMEOUT"]
+            },
+            "timestamp": {"type": "string", "format": "date-time"},
+            "proof_hash": {"type": "string"},
+            "counterexamples": {
+              "type": "array",
+              "items": {"type": "object"}
+            }
+          }
+        }
+      },
+      "description": "Results from verification pipeline stages"
+    },
+    "evaluation_results": {
+      "type": "object",
+      "properties": {
+        "improvement_score": {
+          "type": "number",
+          "description": "Measured improvement over baseline (-1.0 to 1.0)"
+        },
+        "regressions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "test_case": {"type": "string"},
+              "baseline_score": {"type": "number"},
+              "new_score": {"type": "number"},
+              "delta": {"type": "number"}
+            }
+          }
+        },
+        "recommendation": {
+          "type": "string",
+          "enum": ["ACCEPT", "REJECT", "NEEDS_REVIEW"]
+        }
+      },
+      "description": "Results from evaluation pipeline"
+    },
+    "metadata": {
+      "type": "object",
+      "properties": {
+        "priority": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"}
+        },
+        "related_proposals": {
+          "type": "array",
+          "items": {"type": "string"}
+        }
+      },
+      "description": "Additional metadata for tracking and organization"
+    }
+  }
+}

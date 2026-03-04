@@ -1,0 +1,129 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://mirroros.dev/schemas/pulse.schema.json",
+  "title": "Pulse",
+  "description": "Universal unit of mutation in the MRS operational tier. Every Ø1 action is a pulse: draft it, prove it, commit or reject.",
+  "type": "object",
+  "required": [
+    "pulse_id",
+    "mirror",
+    "verb",
+    "operands",
+    "τ",
+    "status"
+  ],
+  "properties": {
+    "pulse_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique pulse identifier (UUID v4)"
+    },
+    "mirror": {
+      "type": "string",
+      "description": "Mirror (agent) that drafted this pulse"
+    },
+    "verb": {
+      "type": "string",
+      "enum": [
+        "Ownership", "Consent", "Sovereignty", "Stewardship",
+        "Performs", "Witness", "Transformation",
+        "can_access", "Auditability"
+      ],
+      "description": "L2 relational verb from concordance. Must exist in concordance.pl."
+    },
+    "operands": {
+      "type": "object",
+      "description": "Arguments to the verb, keyed by concordance sort names",
+      "properties": {
+        "agent": {
+          "type": "string",
+          "description": "Primary agent (concordance sort: agent)"
+        },
+        "agent2": {
+          "type": "string",
+          "description": "Secondary agent for ternary verbs like Consent, Stewardship"
+        },
+        "resource": {
+          "type": "string",
+          "description": "Resource being acted upon (concordance sort: resource)"
+        },
+        "resource2": {
+          "type": "string",
+          "description": "Target resource for Transformation verb"
+        },
+        "action": {
+          "type": "string",
+          "description": "Action being performed or witnessed (concordance sort: action)"
+        },
+        "domain": {
+          "type": "string",
+          "description": "Domain for Sovereignty verb (concordance sort: domain)"
+        },
+        "evidence": {
+          "type": "string",
+          "description": "Evidence artifact for Auditability verb"
+        },
+        "commitment": {
+          "type": "string",
+          "description": "Oath commitment (concordance sort: commitment)"
+        }
+      },
+      "additionalProperties": false
+    },
+    "τ": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when pulse was drafted"
+    },
+    "τ_block": {
+      "type": ["string", "null"],
+      "format": "uuid",
+      "description": "Block ID for atomic multi-pulse transactions. Null for single pulses. All pulses in a block commit or roll back together.",
+      "default": null
+    },
+    "anchor_oath": {
+      "type": ["string", "null"],
+      "description": "Oath invariant this pulse must balance. Null if no oath constraint.",
+      "default": null
+    },
+    "adapter_source": {
+      "type": ["string", "null"],
+      "enum": ["github", "bank", "calendar", "infra", "security", "manual", null],
+      "description": "External system that originated this pulse. Null for internal pulses.",
+      "default": null
+    },
+    "adapter_payload": {
+      "type": "object",
+      "description": "Raw data from the adapter source, preserved for audit. Schema varies by adapter.",
+      "default": {}
+    },
+    "verdicts": {
+      "type": "object",
+      "description": "Dual-gate verification results, filled by the proof engine",
+      "properties": {
+        "prolog": {
+          "type": ["string", "null"],
+          "enum": ["PERMITTED", "REJECTED", null],
+          "description": "Gate 1: Prolog behavioral verdict"
+        },
+        "z3": {
+          "type": ["string", "null"],
+          "enum": ["VALID", "VIOLATION", "SKIP", "UNKNOWN", "ERROR", null],
+          "description": "Gate 2: Z3 structural verdict"
+        }
+      },
+      "default": {"prolog": null, "z3": null}
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "submitted", "proving", "committed", "rejected"],
+      "description": "Pulse lifecycle status"
+    },
+    "rejection_reason": {
+      "type": ["string", "null"],
+      "description": "Human-readable reason if status is rejected",
+      "default": null
+    }
+  },
+  "additionalProperties": false
+}

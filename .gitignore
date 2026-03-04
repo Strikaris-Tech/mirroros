@@ -1,0 +1,27 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+# Runtime state
+mrs/memory/
+memory/
+
+# Secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Editor
+.idea/
+.vscode/
+*.swp
