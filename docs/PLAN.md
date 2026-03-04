@@ -1,9 +1,9 @@
 # MirrorOS Open-Source Plan
 # Amazon Nova Hackathon + Public Launch
 
-> Branch: `opensource-prep` → new public repo `mirroros`
 > Deadline: March 16, 2026 @ 5:00pm PDT
 > Team: Brandon + Kevin
+> Active branch: `phase2-nova-demo`
 
 ---
 
@@ -25,267 +25,279 @@ team that defined the architecture publicly, before the space fills up.
 
 ## License
 
-**AGPL-3.0 across the board** — core, UI, adapters, everything. Anyone running
-any part of this as a service must open-source their modifications. Clean,
-consistent, no confusion about which layer has which obligations.
-
-Future field/sensor code: dual-licence (GPL community / commercial for DoD/prime
-engagements) — revisit when the time comes.
+**AGPL-3.0 across the board** — core, UI, adapters, everything.
 
 ---
 
 ## What Gets Open-Sourced vs. Stays Private
 
 ### Public (MirrorOS Core)
-- `mrs/prolog/Codex_Laws.pl` — generic version, no Strikaris refs
-- `mrs/prolog/concordance.pl` — the Z3↔Prolog drift prevention system
-- `mrs/bridge/mrs_bridge.py` — core dual-gate (Prolog behavioral + Z3 structural)
+- `mrs/prolog/Codex_Laws.pl`, `concordance.pl`, demo `Agent_Rules.pl`
+- `mrs/bridge/mrs_bridge.py` — dual-gate (Prolog + Z3)
 - `mrs/bridge/datalog_bridge.py`
-- `mrs/verifier/verify_codex.py` + `essence_runes.py`
-- `forge/api.py`, `forge/router.py`, `forge/agent_loader.py` — Forge shell
+- `mrs/verifier/verify_codex.py`, `essence_runes.py`
+- `forge/api.py`, `forge/router.py`, `forge/agent_loader.py`
 - `mrs/console/` — FlameConsole UI
 - `mrs/schemas/` — JSON schemas
-- Generic demo agents (new names, not Zeek/Cindrell/Khan/Strikaris)
-- Generic accounting compliance demo ruleset (not Financial_Compliance.pl)
-- Nova Act integration
-- `adapters/mock_bank.py`, `adapters/mock_ci.py` — community can build new adapters without touching live systems
-- immudb integration (demo/testnet config — no production keys)
+- `adapters/mock_bank.py`, `mock_ci.py`, `mock_accounting.py`
+- `ledger/immudb_client.py`, `ledger/verify.py`
+- `examples/accounting_demo/` — accounting governance demo
+- `examples/zoho_demo/` — quote-to-cash demo (planned)
 - `docs/` — public-safe documentation
 
 ### Private (Strikaris Enterprise)
-- `mrs/compliance/` — the full DSL pipeline (YAML → IR → Prolog/Z3 codegen)
-- `mrs/analysis/` — learning loop (BeliefManager, PatternDetector, ReflectionEngine)
-- `mrs/prolog/Financial_Compliance.pl`, `Defense_Compliance.pl` — encoded domain expertise
-- `mrs/prolog/Agent_Rules.pl` — Strikaris agent definitions
+- `mrs/compliance/` — DSL pipeline (YAML → IR → Prolog/Z3 codegen)
+- `mrs/analysis/` — learning loop
+- `mrs/prolog/Financial_Compliance.pl`, `Defense_Compliance.pl`, `Agent_Rules.pl`
 - `agents/` — all agent configs (Zeek, Cindrell, Khan, Strikaris)
 - `mrs/mirrors/khan/` — NetSuite integration
 - `mrs/mirrors/cindrell/` — financial mirror
-- `forge/config.yaml` — deployment config
-- All `.env*` files
-- Hardware-key integration & production signing keys
-- immudb production config, fork-handling, disaster-recovery scripts
+- `forge/config.yaml`, all `.env*` files
+- Production immudb config, signing keys
+- `netsuite-sdf-analyzer/` — Khan Agent ecosystem (separate private repo)
 
 ---
 
-## Phase 0 — Decisions (Complete before Phase 1)
-- [x] License: AGPL-3.0 (full — core, UI, adapters, everything)
-- [x] Nova approach: Nova Act (UI automation)
+## Phase 0 — Decisions ✓ Complete
+
+- [x] License: AGPL-3.0
+- [x] Nova approach: Nova Act SDK (local, not CDK)
 - [x] Team: Brandon + Kevin joint submission
-- [x] Nova Act SDK access confirmed (Kevin). Using SDK directly, not CDK. Workflow definition available for cloud observability — useful for Devpost submission visuals.
-- [x] Demo agent names — **LedgerLark** selected (clerk/auditor permission tiers)
-- [ ] Public repo: `Strikaris-Tech/mirroros` org or new standalone `mirroros` org?
-- [ ] Real Zoho free tier vs. mock accounting UI (Kevin to decide on Nova Act constraints)
-- [ ] immudb: full integration or testnet-only for demo? (see Phase 2 note)
-
-### Demo Mirror Name Candidates
-
-These are the public-facing agent identities for the open-source demo — not
-Zeek/Cindrell/Khan/Strikaris, which stay private to the Strikaris deployment.
-
-| Mirror | Target System | Primary Verbs | Why It Fits |
-|--------|--------------|---------------|-------------|
-| **LedgerLark** | Zoho Books / Invoices | `Sync`, `Consent`, `Report` | Lark = songbird keeping daily rhythm — perfect for accounting beats. Strong fit for the hackathon demo. |
-| **CourierSpark** | Gmail IMAP/SMTP | `Fetch`, `Filter`, `Route` | Spark carries messages at light-speed; mirrors email pulses. |
-| **WelcomeWarden** | HR Onboarding (Bamboo/Workday) | `Create_Record`, `Validate_Doc`, `Notify` | Warden safeguards the gate; ensures every entrant completes rites. |
-| **OnboardOwl** | HR knowledge base (Confluence) | `Sense_Change`, `Update_Page` | Owl sees in dusk — tracks quiet policy shifts, writes before dawn. |
-| **MailMirror-Lite** | Gmail → Slack bridge | `Transform`, `Forward` | Simplest possible pulse chain: email → pulse → chat. Good intro example. |
-
-**For the hackathon demo:** LedgerLark is the obvious pick — it maps directly
-to the accounting approval scenario (Zoho Books, invoice governance, audit trail).
-The `clerk`/`auditor` roles from the demo scenario become LedgerLark operating
-in two permission tiers.
+- [x] Demo agent names: LedgerLark (clerk/auditor tiers)
+- [x] Nova Act SDK access confirmed (Kevin)
+- [x] Deployment: video submission + public repo (no live server required for judging)
+- [x] Demo video recorded locally (Mac screen capture) — browser visible
+- [x] Existing t4g.small hosts Strikaris website; upgrade to t4g.medium for MirrorOS deployment post-launch
+- [ ] Public repo: `Strikaris-Tech/mirroros-core` (current) or standalone org?
+- [ ] Bedrock access: Brandon confirming Nova Pro (multimodal) for Zoho demo
 
 ---
 
-## Phase 1 — Extract, Scrub & Harden (Days 1–2, ~Mar 3–4)
+## Phase 1 — Extract, Scrub & Harden ✓ Complete
 
-The public repo starts from a **clean initial commit** — no fork, no history
-from this private repo.
-
-### Security first — run before anything goes public
-```bash
-# Scan for secrets, tokens, internal references
-trufflehog filesystem . --only-verified
-gitleaks detect --source . --verbose
-```
-Fix every finding before the first public commit. No exceptions.
-
-### Brandon
-- [x] Run secret scanning on all files earmarked for extraction (trufflehog + gitleaks — clean)
-- [x] Genericize `Codex_Laws.pl` — remove all Strikaris references
-- [x] Write public `Agent_Rules.pl` with demo agents only (LedgerLark, clerk, auditor, courier)
-- [x] Write public `README.md` — 7-line vision, 1-line run command, IPO formula
-- [x] Add `LICENSE` (AGPL-3.0), `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`
-- [x] Strip `CLAUDE.md` → replace with public contributor guide
-- [x] Write `quickstart.sh` — Docker Compose up, proves 5 demo pulses in < 60s
-- [x] Audit every file for internal rune names, codenames, client references
+### Brandon ✓
+- [x] Secret scanning (trufflehog + gitleaks — clean)
+- [x] Genericize `Codex_Laws.pl`
+- [x] Write public `Agent_Rules.pl` (LedgerLark, clerk, auditor, courier)
+- [x] Public `README.md`, `LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`
+- [x] Strip `CLAUDE.md` → public contributor guide (added: no AI co-author refs in commits)
+- [x] Write `quickstart.sh`
+- [x] Audit all files for internal references
 
 ### Kevin
-- ~~Confirm Nova Act SDK access~~ ✓ Done
-- Scope the demo UI (Zoho free tier or mock — needs to be driveable by Nova Act SDK)
-- Set up workflow definition in AWS console (for Devpost visuals)
-- Review extracted codebase for anything that shouldn't be public
-- Review AGPL-3.0 license terms — confirm comfortable before public commit
-
-### Public repo skeleton
-```
-mirroros/
-  README.md               — 7-line vision, 1-line run command
-  LICENSE                 — AGPL-3.0
-  CONTRIBUTING.md
-  SECURITY.md             — threat model + responsible disclosure email
-  CODE_OF_CONDUCT.md
-  quickstart.sh           — Docker Compose + 5 demo pulses < 60s
-  mrs/
-    prolog/               — Codex_Laws.pl, concordance.pl, demo rules
-    bridge/               — MRSBridge core, DatalogBridge
-    verifier/             — CodexVerifier, EssenceRunes
-    schemas/              — JSON schemas
-    console/              — FlameConsole UI
-  forge/                  — API shell, router, agent loader
-  adapters/
-    mock_bank.py          — demo adapter: banking actions
-    mock_ci.py            — demo adapter: CI/CD actions
-    mock_accounting.py    — demo adapter: Zoho-shaped accounting actions
-  ledger/
-    immudb_client.py      — immudb integration (testnet config)
-    verify.py             — proof verification utility
-  examples/
-    accounting_demo/      — the hackathon demo scenario
-      demo_config.toml
-      accounting_compliance.pl
-  docs/
-    architecture.md
-    MRS_IPO.md
-    CONTRIBUTING.md
-```
+- [x] Nova Act SDK access confirmed
+- [ ] Review extracted codebase pre-publish
+- [ ] AGPL-3.0 sign-off
 
 ---
 
-## Phase 2 — immudb + Nova Act Integration (Days 2–5, ~Mar 4–7)
+## Phase 2 — immudb + Accounting Demo ✓ Largely Complete
 
-### immudb (ambitious but worth it — it's the money shot)
-
-immudb replaces the JSON audit trail for the demo. Every MRS decision is
-written as a cryptographically verified ledger entry. The demo shows the
-proof in real-time — this is what no one else has.
-
-```python
-# ledger/immudb_client.py — testnet config, no production keys in repo
-from immudb import ImmudbClient
-
-class MRSLedger:
-    def __init__(self, host="localhost", port=3322):
-        self.client = ImmudbClient(f"{host}:{port}")
-        self.client.login("immudb", "immudb")  # demo credentials only
-
-    def seal(self, decision: dict) -> dict:
-        key = f"mrs:{decision['action_id']}".encode()
-        result = self.client.verifiedSet(key, json.dumps(decision).encode())
-        return {"verified": result.verified, "tx": result.id}
-```
-
-Community builds sign with the testnet key. Production mirrors use private
-keys never committed to the repo — this line holds publicly.
-
-### Nova Act integration
-
-Nova Act SDK drives the browser. MRS wraps Nova Act — not the other way around.
-Nova Act describes what it wants to do; MRS decides whether it's allowed.
-If rejected, Nova Act never touches the page.
-
-```python
-from nova_act import NovaAct
-
-with NovaAct(starting_page="https://books.zoho.com/...") as agent:
-    # MRS gate runs before Nova Act acts
-    auth = bridge.check_authorization("ledgerlark", "approve_payment", invoice_id)
-
-    if auth:
-        agent.act("Click the Approve button for invoice #1042")
-        ledger.seal({"action": "approve_payment", "result": "permitted", ...})
-    else:
-        # Nova Act never touches the UI — MRS stopped it
-        ledger.seal({"action": "approve_payment", "result": "rejected", ...})
-```
-
-Workflow definition (cloud observability) — configure for Devpost submission
-visuals showing the full architecture in AWS console.
-
-```
-Nova Act SDK (describes intent)
-    → MRS auth gate (MRSBridge.check_authorization)
-    → Prolog + Z3 dual-gate
-    → Permitted: Nova Act executes, decision sealed in immudb
-    → Denied: PermissionError, violation sealed in immudb
-```
-
-Router addition — `forge/router.py` gets a `nova_act` backend alongside
-OpenRouter and Ollama.
-
-**Kevin leads on Nova Act + scenarios. Brandon leads on immudb.**
-
-### Phase 2 Status
-- [x] `ledger/immudb_client.py` — MRSLedger with verifiedSet, graceful fallback
-- [x] `ledger/verify.py` — proof verification + CLI
-- [x] `mrs/bridge/mrs_bridge.py` — ledger= param wired into _log_reasoning()
-- [x] `adapters/mock_accounting.py` — AccountingAdapter, MRS-gated actions
+### Done
+- [x] `ledger/immudb_client.py` — MRSLedger, verifiedSet, graceful fallback
+- [x] `ledger/verify.py` — verify_entry() + CLI (`python -m ledger.verify <action_id>`)
+- [x] `mrs/bridge/mrs_bridge.py` — optional `ledger=` param, seals every verdict in `_log_reasoning()`; health check reports `ledger_available`
+- [x] `adapters/mock_accounting.py` — AccountingAdapter, MRS-gated via `violates_accounting_policy/3`
 - [x] `adapters/mock_bank.py` — BankAdapter
 - [x] `adapters/mock_ci.py` — CIAdapter
-- [x] `examples/accounting_demo/accounting_compliance.pl` — Prolog compliance rules
+- [x] `examples/accounting_demo/accounting_compliance.pl` — approval limits, vendor registry, multifile `violates_codex/2` extension
 - [x] `examples/accounting_demo/demo_config.toml`
 - [x] `examples/accounting_demo/run_demo.py` — 5-pulse demo script
-- [ ] Nova Act backend in `forge/router.py` — Kevin
-- [ ] `mrs/console/` FlameConsole UI
-- [ ] Deployment (EC2 / Docker Compose — see docs/DEPLOYMENT.md)
+- [x] `examples/accounting_demo/demo_ui/index.html` — dark-theme invoice UI, live verdict panel (800ms poll)
+- [x] `examples/accounting_demo/server.py` — FastAPI server (port 7242), MRS-gated `/api/approve/:id`, push endpoint for nova_demo
+- [x] `examples/accounting_demo/nova_demo.py` — governed agent loop; dry-run without key; rich terminal output with latency + immudb seal per pulse
+- [x] `docs/EXPLAINER_TO_JUDGES.md` — architecture explainer, cursor-not-decision-maker framing
+
+### Known Issues / In Progress
+- [ ] **Pulse 3 bug**: `inv_003` (unknown_co) shows PERMITTED — vendor check fires on `pay_vendor/2` but demo queries `approve_payment/2`. Fix: add `invoice_vendor/2` facts to `accounting_compliance.pl` and extend `approve_payment` rule to check vendor.
+- [ ] **Pulse sequence redesign**: Reorder to clerk-processes-full-queue → auditor-handles-escalations (see below)
+- [ ] Nova Act `nova_demo.py` — tested in dry-run; needs live test with API key
+
+### Corrected pulse sequence (pending fix)
+
+| # | Agent | Invoice | Expected | Why |
+|---|-------|---------|----------|-----|
+| 1 | clerk | inv_001 ($200) | PERMITTED | Within limit |
+| 2 | clerk | inv_002 ($25,000) | REJECTED | Exceeds clerk limit → escalate |
+| 3 | clerk | inv_003 ($500, unknown_co) | REJECTED | Bad vendor → escalate |
+| 4 | clerk | inv_004 ($950) | PERMITTED | Within limit |
+| 5 | auditor | inv_002 ($25,000) | PERMITTED | Authority satisfied |
+| 6 | auditor | inv_003 ($500, unknown_co) | REJECTED | Vendor policy — no role overrides |
+
+Pulse 6 is the critical one: auditor can override a *limit* (role authority) but cannot
+override a *vendor violation* (absolute rule). This distinction is the demo's key point.
 
 ---
 
-## Phase 3 — Demo Scenario (Days 5–9, ~Mar 7–11)
+## Phase 3 — Zoho Quote-to-Cash Demo (Mar 5–10)
 
-### The Scenario: Accounting Approval Workflow
+**Scenario:** Strikaris quotes Khan Mall for Shopify development services.
+Full quote-to-cash workflow governed by MRS at every stage. Nova Vision
+reads Khan Mall's signed PO response and compares against the original quote.
 
-Demo agent (`clerk`) attempts a series of actions. MRS governs each one.
-Every decision is sealed in immudb in real-time.
+### Participants
+- **Strikaris** — vendor, Zoho Books account
+- **Khan Mall** — client, Zoho Invoice account
+- **We control both sides** — scripted round-trip, no real email loop
 
-| Action | Agent | MRS Result | Why |
-|--------|-------|------------|-----|
-| Approve invoice ($200) | clerk | ✅ Permitted | Within approval limit |
-| Approve invoice ($25,000) | clerk | ❌ Rejected | Exceeds clerk authority |
-| Pay unverified vendor | clerk | ❌ Rejected | Vendor not in approved list |
-| Same invoice via auditor | auditor | ✅ Permitted | Authority level satisfied |
-| View immudb ledger | — | All 4 decisions, cryptographically sealed | |
+### Demo product
+Shopify development services (Discovery, Sprint 1, Integration — 3 line items).
+Khan Mall is a Shopify dev shop — natural fit.
 
-The ledger sequence at the end is the money shot. `result.verified == True`
-on screen. That's the proof.
+### Workflow
 
-**Generic compliance rules (safe to open-source):**
-```prolog
-% examples/accounting_demo/accounting_compliance.pl
-violates_approval_policy(Agent, approve_payment(_, Amount), Reason) :-
-    approval_limit(Agent, Limit),
-    Amount > Limit,
-    atom_concat('Exceeds approval authority: limit is ', Limit, Reason).
+```
+[1] QUOTE CREATION
+    Nova Act (Strikaris) → Zoho Books
+    Create quote: Khan Mall — Shopify Dev Services
+    MRS: sales_rep authorized to create quote this size?
+    Nova Act sends quote via email
+    immudb: quote_sent sealed
 
-violates_vendor_policy(_, pay_vendor(Vendor, _), Reason) :-
-    \+ vendor_verified(Vendor),
-    Reason = 'Vendor not in approved list'.
+[2] PO RESPONSE (generated — no real email loop)
+    po_generator.py creates Khan Mall's PO response PDF (reportlab)
+    Randomly varies: signature+initials (always), quantity change (30%),
+    partial acceptance (20%), price counter-offer (10%)
+    Seeded mode for video rehearsal; unseeded for live runs
 
-approval_limit(clerk, 1000).
-approval_limit(auditor, 50000).
-vendor_verified(acme_corp).
-vendor_verified(trusted_supplier).
+[3] DOCUMENT VERIFICATION (Nova Vision)
+    PDF → image (pdf2image)
+    Amazon Nova Pro (Bedrock) extracts: PO#, line items, totals, signature
+    MRS evaluates comparison against original quote:
+      MATCH    → quote_approved
+      MISMATCH → document_rejected, variance detail sealed
+
+[4] FULFILLMENT AUTH
+    MRS: document_verified(QuoteId) must hold
+    Nova Act marks quote → Accepted in Zoho Books
+
+[5] INVOICE GENERATION
+    Nova Act converts approved quote → Invoice in Zoho Books
+    immudb: invoice_generated sealed
+
+[EXCEPTION PATH — triggered by MISMATCH]
+    Nova Act drafts exception email to sales rep
+    immudb: document_rejected, variance_detail sealed
+    Workflow halts — fulfillment blocked
 ```
 
+### Prolog rules needed (`examples/zoho_demo/quote_compliance.pl`)
+
+```prolog
+% Stage transition enforcement — cannot skip steps
+valid_transition(quote_sent, po_received).
+valid_transition(po_received, quote_approved).
+valid_transition(quote_approved, fulfillment_started).
+valid_transition(fulfillment_started, invoice_sent).
+
+violates_codex(_, advance_stage(From, To)) :-
+    \+ valid_transition(From, To).
+
+% Quote approval limits
+approval_limit(sales_rep, 10000).
+approval_limit(manager,  100000).
+
+% Document comparison — 2% tolerance
+violates_codex(_, approve_document(QuoteId, POAmount, QuoteAmount), Reason) :-
+    Variance is abs(POAmount - QuoteAmount) / QuoteAmount * 100,
+    Variance > 2.0,
+    format(atom(Reason), 'Document variance ~1f% exceeds 2% tolerance', [Variance]).
+
+% Fulfillment requires verified document
+violates_codex(_, start_fulfillment(QuoteId)) :-
+    \+ document_verified(QuoteId).
+```
+
+### Build order
+1. `examples/zoho_demo/quote_compliance.pl` — Prolog rules
+2. `ledger/po_generator.py` — reportlab PDF with randomized variations
+3. `ledger/vision.py` — Bedrock Nova Pro call, structured extraction
+4. `examples/zoho_demo/quote_demo.py` — orchestrator (same terminal output pattern as nova_demo.py)
+5. Nova Act instructions tuned against real Zoho Books UI (requires test run)
+
+### Dependencies
+- `reportlab` — PDF generation
+- `pdf2image` + `poppler` — PDF → image for Nova Vision
+- `boto3` — Bedrock API (Nova Pro)
+- Bedrock access with Nova Pro enabled in us-east-1 (Brandon confirming)
+
+### Risks
+- Nova Act + Zoho UI requires tuning against real account — budget time
+- Nova Vision extraction accuracy depends on prompt engineering — one test run needed
+- Bedrock access gate (confirming)
+
 ---
 
-## Phase 4 — Submission (Days 9–12, ~Mar 11–14)
+## Phase 3b — SDF Analyzer + LedgerLark Demo (Exploring)
+
+**What the SDF Analyzer is:**
+A static analysis tool for NetSuite SDF projects (Kevin's work, private repo
+`Strikaris-Tech/netsuite-sdf-analyzer`, Phase 1 complete). Parses SuiteScripts
+via AST (Acorn), reads deployment XML, builds dependency graphs, produces JSON
+reports and PlantUML diagrams. Designed to feed the Khan Agent AI system.
+
+**The MRS governance angle:**
+The analyzer is read-only and deterministic. What needs governance is what
+Khan Agent is permitted to DO with the analysis results.
+
+```
+sdf-analyzer analyze <project>
+        ↓ JSON output
+LedgerLark reads automation inventory
+        ↓
+MRS asserts facts from analysis:
+  - script X deployed to RELEASED with parse errors
+  - circular dependency detected: A → B → A
+  - scheduled script running DAILY (policy: max WEEKLY for this tier)
+        ↓
+MRS evaluates each finding:
+  PERMITTED → Khan Agent may document/recommend
+  REJECTED  → Khan Agent blocked from auto-deploying/modifying
+        ↓
+immudb seals the analysis event + each governance decision
+```
+
+**Why this is compelling:**
+- The SDF Analyzer output is structured JSON — clean MRS input, no parsing needed
+- Governance on AI actions over a client's NetSuite codebase is a real problem
+- Khan Mall is an existing NetSuite client — fixture data could be real (or anonymized)
+- No browser needed for the analysis step — terminal-only, very fast to demo
+- Complements the Zoho demo: Khan Mall's NetSuite + Strikaris's Zoho Books = one client story
+
+**Prolog rules needed:**
+```prolog
+% Deployment policy
+violates_codex(_, deploy_to_production(ScriptId)) :-
+    script_has_parse_errors(ScriptId).
+
+violates_codex(_, deploy_to_production(ScriptId)) :-
+    script_in_circular_dependency(ScriptId).
+
+% Schedule frequency limits
+violates_codex(_, approve_schedule(ScriptId, Frequency)) :-
+    exceeds_schedule_policy(Frequency).
+
+exceeds_schedule_policy('DAILY') :- client_tier(standard).
+```
+
+**Status:** Exploring — not yet started. Kevin to advise on SDF analyzer output
+format and Khan Agent integration points. This could be a Phase 4 / post-hackathon
+item if the Zoho demo takes priority.
+
+---
+
+## Phase 4 — Demo Video + Submission (Mar 11–14)
 
 **Demo video (3 minutes):**
-- 0:00–0:30 — The problem: AI agents taking consequential actions with no proof
-- 0:30–1:30 — Live demo: Nova Act driving the UI, MRS governing actions
-- 1:30–2:30 — The ledger: immudb sealing every decision in real-time, `verified == True`
-- 2:30–3:00 — The architecture: Codex → Z3 → Bridge → Agents, never inverted
+- 0:00–0:30 — The problem: AI agents acting without proof
+- 0:30–1:30 — Live: Nova Act driving Zoho, MRS governing each action
+- 1:30–2:30 — The ledger: immudb sealing decisions, `verified == True`
+- 2:30–3:00 — Architecture overview: Codex → Z3 → Bridge → Agents
+
+**Recording setup:**
+- Run demo locally on Mac (QuickTime / OBS screen capture)
+- Three panes visible: Chromium (Nova Act), Zoho UI, terminal (MRS verdicts)
+- Seeded PDF generator for reproducible run
 
 **Devpost submission:**
 
@@ -296,27 +308,19 @@ vendor_verified(trusted_supplier).
 *Tagline:* The ink that writes itself. Every agent action proven before
 it executes, sealed in a record that cannot be changed.
 
-*Technical implementation (60%):*
-- Amazon Nova Act driving real UI automation
-- SWI-Prolog Codex: machine-executable law governing every action
-- Z3 theorem prover: formal proof that constraints hold
-- Dual-gate architecture: behavioral + structural verification
-- immudb: cryptographically tamper-proof audit trail, verified on write
-
-*Enterprise impact (20%):*
-AI agents taking consequential actions in financial, legal, and regulated
-workflows is no longer hypothetical. MirrorOS provides the governance
-substrate that makes those deployments auditable, provable, and compliant.
-The EU AI Act, SOX, DFARS — all require what MirrorOS delivers structurally.
+*Key differentiator (from EXPLAINER_TO_JUDGES.md):*
+Nova Act receives mechanical instructions, not policy reasoning. The decision
+surface is a deterministic Prolog query. The LLM is a cursor.
 
 ---
 
 ## Phase 5 — Public Launch (Mar 14–16)
 
-- Publish the new public `mirroros` repo
-- Submit to Devpost (repo must be public at submission)
-- LinkedIn/social post from Strikaris — lead with the lift-off sentence
-- Tag the hackathon #AmazonNova
+- Publish public repo (confirm org: `Strikaris-Tech/mirroros-core` or standalone)
+- Submit to Devpost (repo must be public)
+- Remove `docs/PLAN.md` before public commit
+- LinkedIn/social from Strikaris — lead with lift-off sentence
+- Tag #AmazonNova
 
 ---
 
@@ -324,48 +328,47 @@ The EU AI Act, SOX, DFARS — all require what MirrorOS delivers structurally.
 
 | Week | Action | Hook |
 |------|--------|------|
-| 0 | GitHub public + social post | "Proof-bound agent actions in 60s." |
-| 1 | Hacker News "Show HN: MirrorOS" | Stay in comments 24h answering proofs |
+| 0 | GitHub public + social | "Proof-bound agent actions in 60s." |
+| 1 | Hacker News "Show HN: MirrorOS" | Stay in comments 24h |
 | 2 | Dev.to tutorial — build a custom adapter | Drive first PRs |
-| 4 | First **Rune Jam** — virtual hack day | Award contributors for best adapter |
+| 4 | First **Rune Jam** — virtual hack day | Award best adapter |
 | Ongoing | Label issues `good-first-pulse` | Grow contributor swarm |
-
----
-
-## Post-Hackathon
-
-- Monitor traction (stars, forks, issues) for 30 days
-- If traction: Discord or GitHub Discussions, respond to community
-- If no traction: archive cleanly, no harm done
-- Either way: Strikaris enterprise product is unaffected
 
 ---
 
 ## Responsibilities
 
-| Task | Owner |
-|------|-------|
-| Secret scanning + file extraction | Brandon |
-| Generic Codex + Agent_Rules (demo) | Brandon |
-| Public README + docs | Brandon |
-| LICENSE, community files | Brandon |
-| `quickstart.sh` | Brandon |
-| Generic Prolog demo rules | Brandon |
-| Nova Act SDK integration | Kevin |
-| AWS workflow definition (observability) | Kevin |
-| Demo scenarios (3 minimum, more if possible) | Kevin |
-| Code review — extracted files pre-publish | Kevin |
-| License review (AGPL-3.0 sign-off) | Kevin |
-| immudb setup + `MRSLedger` client | Brandon |
-| Deployment (EC2 + Docker Compose) | Brandon |
-| Video production | Both |
-| Devpost submission | Brandon |
+| Task | Owner | Status |
+|------|-------|--------|
+| Secret scanning + extraction | Brandon | ✓ Done |
+| Generic Codex + Agent_Rules | Brandon | ✓ Done |
+| Public README + docs | Brandon | ✓ Done |
+| LICENSE, community files | Brandon | ✓ Done |
+| quickstart.sh | Brandon | ✓ Done |
+| immudb ledger integration | Brandon | ✓ Done |
+| Mock adapters (bank, CI, accounting) | Brandon | ✓ Done |
+| Accounting demo (run_demo.py, server, UI) | Brandon | ✓ Done |
+| nova_demo.py (dry-run tested) | Brandon | In progress |
+| Pulse sequence fix (vendor check + reorder) | Brandon | Pending |
+| Zoho demo — po_generator.py | Brandon | Planned |
+| Zoho demo — vision.py (Nova Vision/Bedrock) | Brandon | Pending Bedrock access |
+| Zoho demo — quote_demo.py orchestrator | Brandon | Planned |
+| Nova Act instructions (Zoho Books UI) | Brandon + Kevin | Planned |
+| Nova Act SDK integration | Kevin | In progress |
+| AWS workflow definition (Devpost visuals) | Kevin | Pending |
+| SDF Analyzer → LedgerLark demo | Kevin + Brandon | Exploring |
+| Code review — pre-publish | Kevin | Pending |
+| AGPL-3.0 sign-off | Kevin | Pending |
+| Demo video production | Both | Planned |
+| Devpost submission | Brandon | Planned |
+| Remove PLAN.md before public launch | Brandon | Pre-launch |
 
 ---
 
 ## Open Questions
 
-- [ ] `Strikaris-Tech/mirroros` or standalone `mirroros` org?
-- [ ] Real Zoho or mock UI? (Kevin + Nova Act constraints)
-- [ ] Verify the sub-10ms verdict claim before using in messaging
-- [ ] Deployment target — see docs/DEPLOYMENT.md
+- [ ] Bedrock access — Nova Pro in us-east-1 enabled? (Brandon confirming)
+- [ ] Public repo org: `Strikaris-Tech/mirroros-core` or standalone `mirroros` org?
+- [ ] SDF Analyzer demo: hackathon scope or post-hackathon?
+- [ ] Verify sub-10ms verdict claim in messaging before using it
+- [ ] Khan Mall NetSuite fixture: use Strikaris fixture or anonymized Khan data for SDF demo?
