@@ -8,7 +8,7 @@ MRS verdict history in memory.
 Usage:
     python examples/accounting_demo/server.py
 
-    Then open http://localhost:8080 — or let nova_demo.py open it.
+    Then open http://localhost:7242 — or let nova_demo.py open it.
 
 Endpoints:
     GET  /                      — invoice approval UI
@@ -16,6 +16,8 @@ Endpoints:
     POST /api/approve/{id}      — MRS-gated approval (browser-triggered)
     POST /api/mrs/verdict       — called by nova_demo.py to push a verdict
     GET  /api/verdicts          — full verdict + invoice state (for polling)
+    POST /api/mark_approved/{id} — set invoice approved after Nova Act clicks (no gate re-run)
+    POST /api/reset             — reset all invoices to pending, clear verdict log
 """
 
 from __future__ import annotations
@@ -36,12 +38,17 @@ import uvicorn
 
 # ── Invoice state ─────────────────────────────────────────────────────────────
 
-INVOICES: dict[str, dict[str, Any]] = {
+_INVOICE_DEFAULTS: dict[str, dict[str, Any]] = {
     "inv_001": {"vendor": "acme_corp",        "vendor_name": "Acme Corp",           "amount": 200,   "status": "pending"},
     "inv_002": {"vendor": "trusted_supplier", "vendor_name": "Trusted Supplier Inc","amount": 25000, "status": "pending"},
     "inv_003": {"vendor": "unknown_co",       "vendor_name": "Unknown Co",          "amount": 500,   "status": "pending"},
     "inv_004": {"vendor": "acme_corp",        "vendor_name": "Acme Corp",           "amount": 950,   "status": "pending"},
 }
+
+def _fresh_invoices() -> dict[str, dict[str, Any]]:
+    return {k: dict(v) for k, v in _INVOICE_DEFAULTS.items()}
+
+INVOICES: dict[str, dict[str, Any]] = _fresh_invoices()
 
 # Running verdict log — displayed in the UI decision panel
 VERDICTS: list[dict[str, Any]] = []
@@ -133,7 +140,9 @@ async def push_verdict(payload: dict):
     permitted  = payload.get("permitted", False)
 
     if invoice_id and invoice_id in INVOICES:
-        INVOICES[invoice_id]["status"] = "approved" if permitted else "blocked"
+        # Only pre-set "blocked" immediately — "approved" waits for Nova Act's actual click.
+        if not permitted:
+            INVOICES[invoice_id]["status"] = "blocked"
 
     payload.setdefault("time", datetime.now().strftime("%H:%M:%S"))
     VERDICTS.append(payload)
@@ -143,6 +152,37 @@ async def push_verdict(payload: dict):
 @app.get("/api/verdicts")
 async def get_verdicts():
     return JSONResponse({"invoices": INVOICES, "verdicts": VERDICTS})
+
+
+@app.post("/api/mark_approved/{invoice_id}")
+async def mark_approved(invoice_id: str):
+    """
+    Mark an invoice approved without re-running the gate.
+
+    Called by the Approve button in the browser UI after Nova Act clicks it.
+    The governance decision was already made (and logged) by nova_demo.py;
+    this endpoint simply updates the visible status so the UI reflects it.
+    """
+    invoice = INVOICES.get(invoice_id)
+    if not invoice:
+        return JSONResponse({"error": f"Invoice '{invoice_id}' not found"}, status_code=404)
+    INVOICES[invoice_id]["status"] = "approved"
+    return JSONResponse({
+        "permitted":  True,
+        "invoice_id": invoice_id,
+        "amount":     invoice["amount"],
+        "action":     "approve_invoice",
+        "time":       datetime.now().strftime("%H:%M:%S"),
+    })
+
+
+@app.post("/api/reset")
+async def reset():
+    """Reset all invoices to pending and clear the verdict log. Call before each demo run."""
+    global INVOICES, VERDICTS
+    INVOICES = _fresh_invoices()
+    VERDICTS = []
+    return JSONResponse({"ok": True})
 
 
 # ── Bridge singleton ──────────────────────────────────────────────────────────
@@ -170,6 +210,6 @@ def _get_bridge():
 
 if __name__ == "__main__":
     print("MirrorOS Demo UI")
-    print("  http://localhost:8080")
+    print("  http://localhost:7242")
     print("  Ctrl+C to stop\n")
-    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="warning")
+    uvicorn.run(app, host="0.0.0.0", port=7242, log_level="warning")

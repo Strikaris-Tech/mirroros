@@ -252,14 +252,16 @@
     }
   }
 
-  // Called by Nova Act via button click — or manually
+  // Called by Nova Act via button click — or manually.
+  // Marks the invoice approved without re-running the gate; the MRS verdict
+  // was already decided and logged by nova_demo.py before this click.
   async function requestApprove(invoiceId) {
     const btn = document.getElementById(`btn-${invoiceId}`);
     if (btn) btn.disabled = true;
-    const res = await fetch(`/api/approve/${invoiceId}`, { method: 'POST' });
+    const res = await fetch(`/api/mark_approved/${invoiceId}`, { method: 'POST' });
     const result = await res.json();
     updateRow(invoiceId, result);
-    addVerdict(result);
+    // Verdict log is populated via /api/verdicts polling — no addVerdict() needed here.
   }
 
   function updateRow(invoiceId, result) {

@@ -1,10 +1,10 @@
 """
 MirrorOS + Nova Act — Governed Accounting Demo
 ===============================================
-Runs the 5-pulse demo with a real browser you can watch.
+Runs the 6-pulse demo with a real browser you can watch.
 
 What you'll see:
-  - Browser opens on the invoice approval page (localhost:8080)
+  - Browser opens on the invoice approval page (localhost:7242)
   - Terminal shows MRS gate firing before each browser action
   - PERMITTED: Nova Act clicks Approve — invoice status updates live
   - REJECTED:  Nova Act sits still — terminal shows the Prolog violation
@@ -80,6 +80,7 @@ def _seal_line(result: dict):
 # ── Demo pulses ───────────────────────────────────────────────────────────────
 
 PULSES = [
+    # ── Clerk processes the full queue ────────────────────────────────────────
     {
         "agent":      "clerk",
         "invoice_id": "inv_001",
@@ -92,28 +93,36 @@ PULSES = [
         "invoice_id": "inv_002",
         "amount":     25000,
         "expected":   "REJECTED",
-        "note":       "$25,000 — exceeds clerk limit",
+        "note":       "$25,000 — exceeds clerk limit → escalate to auditor",
     },
     {
         "agent":      "clerk",
         "invoice_id": "inv_003",
         "amount":     500,
         "expected":   "REJECTED",
-        "note":       "unknown_co — vendor not in approved list",
+        "note":       "unknown_co — vendor not in approved list → escalate",
     },
+    {
+        "agent":      "clerk",
+        "invoice_id": "inv_004",
+        "amount":     950,
+        "expected":   "PERMITTED",
+        "note":       "$950 — within clerk limit ($1,000)",
+    },
+    # ── Auditor handles escalations ───────────────────────────────────────────
     {
         "agent":      "auditor",
         "invoice_id": "inv_002",
         "amount":     25000,
         "expected":   "PERMITTED",
-        "note":       "$25,000 — within auditor limit ($50,000)",
+        "note":       "$25,000 — within auditor limit ($50,000); limit overridden",
     },
     {
         "agent":      "auditor",
-        "invoice_id": "inv_004",
-        "amount":     950,
-        "expected":   "PERMITTED",
-        "note":       "$950 — within auditor limit",
+        "invoice_id": "inv_003",
+        "amount":     500,
+        "expected":   "REJECTED",
+        "note":       "unknown_co — vendor policy is absolute; no role can override",
     },
 ]
 
@@ -125,8 +134,22 @@ def _push_to_ui(verdict: dict):
     try:
         data = json.dumps(verdict).encode()
         req  = urllib.request.Request(
-            "http://localhost:8080/api/mrs/verdict",
+            "http://localhost:7242/api/mrs/verdict",
             data=data,
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        urllib.request.urlopen(req, timeout=2)
+    except Exception:
+        pass  # UI server down — non-fatal
+
+
+def _reset_ui():
+    """Reset server state so every demo run starts with all invoices pending."""
+    try:
+        req = urllib.request.Request(
+            "http://localhost:7242/api/reset",
+            data=b"{}",
             headers={"Content-Type": "application/json"},
             method="POST",
         )
@@ -184,6 +207,9 @@ def run():
         if nova_available:
             print(f"{RED}nova-act not installed: pip install nova-act{RESET}\n")
             nova_available = False
+
+    # ── Reset UI state so every run starts clean ──────────────────────────────
+    _reset_ui()
 
     # ── Run pulses ────────────────────────────────────────────────────────────
     print(f"{BOLD}Running {len(PULSES)} governed pulses...{RESET}\n")
@@ -259,7 +285,7 @@ def run():
 
     # ── Execute with or without Nova Act ─────────────────────────────────────
     if nova_available and _nova_import:
-        with NovaAct(starting_page="http://localhost:8080") as nova:
+        with NovaAct(starting_page="http://localhost:7242", ignore_https_errors=True) as nova:
             _run_with_nova(nova)
     else:
         _run_with_nova(None)

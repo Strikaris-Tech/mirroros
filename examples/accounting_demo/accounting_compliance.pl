@@ -34,16 +34,34 @@ vendor_verified(acme_corp).
 vendor_verified(trusted_supplier).
 vendor_verified(city_utilities).
 
+% ── INVOICE → VENDOR MAPPING ─────────────────────────────────────────────────
+% invoice_vendor(+InvoiceId, -VendorId)
+% Maps an invoice to the vendor it pays.  Used to enforce vendor policy
+% at the approve_payment stage (before the payment is executed).
+
+invoice_vendor(inv_001, acme_corp).
+invoice_vendor(inv_002, trusted_supplier).
+invoice_vendor(inv_003, unknown_co).
+invoice_vendor(inv_004, city_utilities).
+
 % ── POLICY VIOLATION PREDICATES (with reasons) ──────────────────────────────
 % violates_accounting_policy(+Agent, +Action, -Reason)
 % Called by AccountingAdapter._gate() before every write action.
 % Succeeds (with Reason bound) when the action is NOT permitted.
 
+% Amount exceeds agent's approval authority.
 violates_accounting_policy(Agent, approve_payment(_, Amount), Reason) :-
     approval_limit(Agent, Limit),
     Amount > Limit,
     format(atom(Reason),
            'Exceeds approval authority: ~w limit is ~w', [Agent, Limit]).
+
+% Invoice's vendor is not in the approved list — no role can override this.
+violates_accounting_policy(_, approve_payment(InvoiceId, _), Reason) :-
+    invoice_vendor(InvoiceId, Vendor),
+    \+ vendor_verified(Vendor),
+    format(atom(Reason),
+           'Vendor not in approved list: ~w', [Vendor]).
 
 violates_accounting_policy(_, pay_vendor(Vendor, _), Reason) :-
     \+ vendor_verified(Vendor),
@@ -63,6 +81,10 @@ violates_codex(Agent, approve_payment(_, Amount)) :-
     approval_limit(Agent, Limit),
     Amount > Limit.
 
+violates_codex(_, approve_payment(InvoiceId, _)) :-
+    invoice_vendor(InvoiceId, Vendor),
+    \+ vendor_verified(Vendor).
+
 violates_codex(_, pay_vendor(Vendor, _)) :-
     \+ vendor_verified(Vendor).
 
@@ -78,6 +100,12 @@ violates_codex(_, pay_vendor(Vendor, _)) :-
 %   ?- violates_accounting_policy(auditor, approve_payment(inv_002, 25000), R).
 %   false.                             % 25000 <= 50000 — permitted
 %
+%   ?- violates_accounting_policy(clerk, approve_payment(inv_003, 500), R).
+%   R = 'Vendor not in approved list: unknown_co'.    % vendor check fires
+%
+%   ?- violates_accounting_policy(auditor, approve_payment(inv_003, 500), R).
+%   R = 'Vendor not in approved list: unknown_co'.    % role cannot override vendor policy
+%
 %   ?- violates_accounting_policy(clerk, pay_vendor(unknown_co, 500), R).
 %   R = 'Vendor not in approved list: unknown_co'.
 %
@@ -86,6 +114,9 @@ violates_codex(_, pay_vendor(Vendor, _)) :-
 %
 %   ?- violates_codex(clerk, approve_payment(inv_002, 25000)).
 %   true.
+%
+%   ?- violates_codex(auditor, approve_payment(inv_003, 500)).
+%   true.                              % vendor policy — auditor cannot override
 % ============================================================
 
 % End of accounting_compliance.pl
