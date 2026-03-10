@@ -30,12 +30,10 @@ class ConversationTracker:
         self.config = config
         self.track_interactions = config.get("mrs", {}).get("track_all_interactions", True)
         self.track_outcomes = config.get("mrs", {}).get("log_outcomes", True)
-        self.enable_learning = config.get("mrs", {}).get("enable_learning", False)
-        
+
         logger.info(f"ConversationTracker initializing...")
         logger.info(f"  track_interactions: {self.track_interactions}")
         logger.info(f"  track_outcomes: {self.track_outcomes}")
-        logger.info(f"  enable_learning: {self.enable_learning}")
         
         # Initialize MRS Bridge with error handling
         try:
@@ -50,34 +48,8 @@ class ConversationTracker:
             self.mrs = None
             self.mrs_available = False
         
-        # Initialize Learning Engine if enabled
         self.reflection_engine = None
         self.learning_available = False
-        if self.enable_learning and self.mrs_available:
-            try:
-                logger.info("Initializing Reflection Engine...")
-                from analysis.reflection_engine import ReflectionEngine
-                
-                # Get paths relative to mrs directory
-                mrs_base = Path(__file__).resolve().parent.parent / "mrs"
-                
-                # Get learning parameters from config
-                min_occurrences = config.get("mrs", {}).get("min_pattern_occurrences", 3)
-                confidence_threshold = config.get("mrs", {}).get("confidence_threshold", 0.5)
-                
-                self.reflection_engine = ReflectionEngine(
-                    outcomes_path=str(mrs_base / "memory" / "outcomes.json"),
-                    sessions_path=str(Path(__file__).resolve().parent.parent / "memory" / "sessions"),
-                    reflections_path=str(mrs_base / "memory" / "reflections.json"),
-                    min_occurrences=min_occurrences,
-                    confidence_threshold=confidence_threshold
-                )
-                self.learning_available = True
-                logger.info("✓ Reflection Engine initialized successfully")
-            except Exception as e:
-                logger.error(f"Reflection Engine initialization failed: {e}", exc_info=True)
-                print(f"Warning: Learning engine initialization failed: {e}")
-                print("Continuing without learning capabilities...")
 
     def start_conversation(
         self,
@@ -238,17 +210,6 @@ class ConversationTracker:
                 metadata=metadata or {}
             )
             
-            # Trigger learning if enabled
-            if self.learning_available and self.reflection_engine:
-                logger.debug(f"Triggering learning check for agent: {agent_name}")
-                try:
-                    reflections = self.reflection_engine.check_and_trigger(agent=agent_name)
-                    if reflections:
-                        logger.info(f"✓ Learning triggered {len(reflections)} reflections for {agent_name}")
-                        result["reflections_triggered"] = len(reflections)
-                except Exception as e:
-                    logger.error(f"Learning trigger failed: {e}", exc_info=True)
-            
             return result
         except Exception as e:
             logger.error(f"MRS outcome recording failed: {e}", exc_info=True)
@@ -351,7 +312,6 @@ class ConversationTracker:
         """
         health = {
             "mrs_available": self.mrs_available,
-            "learning_available": self.learning_available,
             "track_interactions": self.track_interactions,
             "track_outcomes": self.track_outcomes
         }
