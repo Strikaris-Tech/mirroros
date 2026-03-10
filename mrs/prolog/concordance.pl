@@ -94,6 +94,13 @@ concordance(z3, 'Auditability',   prolog, auditable,  [action, evidence]).
 
 concordance(z3, 'Oath', prolog, oath, [agent, commitment]).
 
+% ─── L3 AP Routing ───────────────────────────────────────────────────────────
+% Asserted by LedgerLark after a routing gate passes.
+% routed_to(BillId, Agent) — bill resource assigned to accounting agent.
+
+% RoutedTo — bill (resource) is assigned to a handling agent
+concordance(z3, 'RoutedTo', prolog, routed_to, [resource, agent]).
+
 % ─── Introspection helper ─────────────────────────────────────────────────────
 % Returns all Z3 predicate names registered in this concordance.
 % Called by MRSBridge._verify_concordance_coverage() at boot.

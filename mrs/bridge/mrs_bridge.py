@@ -14,7 +14,7 @@ import time
 
 # Z3 formal verification (optional)
 try:
-    from verifier.verify_codex import CodexVerifier, VerificationLevel, VerificationStatus
+    from mrs.verifier.verify_codex import CodexVerifier, VerificationLevel, VerificationStatus
     Z3_VERIFICATION_AVAILABLE = True
 except ImportError:
     Z3_VERIFICATION_AVAILABLE = False
@@ -196,7 +196,7 @@ class MRSBridge:
         """
         names = []
         try:
-            from verifier.essence_runes import EssenceRunes
+            from mrs.verifier.essence_runes import EssenceRunes
             from z3 import FuncDeclRef
             er = EssenceRunes()
             for attr_name in dir(er):
@@ -332,7 +332,7 @@ class MRSBridge:
             Dict with status: VALID | VIOLATION | UNKNOWN | ERROR
         """
         try:
-            from verifier.essence_runes import EssenceRunes
+            from mrs.verifier.essence_runes import EssenceRunes
             from z3 import Solver, Const, FuncDeclRef, sat
 
             er = EssenceRunes()
