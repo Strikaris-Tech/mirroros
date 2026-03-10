@@ -353,7 +353,13 @@ if __name__ == "__main__":
             nova_available = False
 
     if nova_available and _nova_import:
-        with NovaAct(starting_page=ZOHO_URL, ignore_https_errors=True) as nova:
+        nova_profile = Path.home() / ".mirroros" / "nova_zoho_profile"
+        nova_profile.mkdir(parents=True, exist_ok=True)
+        with NovaAct(
+            starting_page=ZOHO_URL,
+            ignore_https_errors=True,
+            user_data_dir=str(nova_profile),
+        ) as nova:
             run(nova, seed=args.seed, live_vision=args.live)
     else:
         run(None, seed=args.seed, live_vision=args.live)

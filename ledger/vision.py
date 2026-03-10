@@ -37,7 +37,7 @@ from typing import Any
 MOCK_VISION = True
 
 # ── Model ─────────────────────────────────────────────────────────────────────
-NOVA_PRO_MODEL = "us.amazon.nova-pro-v1:0"
+NOVA_PRO_MODEL = "amazon.nova-pro-v1:0"
 
 # ── Extraction prompt ─────────────────────────────────────────────────────────
 EXTRACTION_PROMPT = """\
