@@ -30,6 +30,7 @@ Usage:
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from typing import Any
 
 # ── Feature flag ──────────────────────────────────────────────────────────────
@@ -75,7 +76,8 @@ def _call_nova_pro(pdf_path: str) -> dict[str, Any]:
     """Send PDF bytes to Nova Pro via Bedrock Converse API and parse response."""
     import boto3
 
-    pdf_bytes = open(pdf_path, "rb").read()
+    with open(pdf_path, "rb") as f:
+        pdf_bytes = f.read()
     client    = boto3.client("bedrock-runtime", region_name="us-east-1")
 
     response = client.converse(
@@ -114,7 +116,7 @@ def _mock_from_po_data(mock_data: dict) -> dict[str, Any]:
     return {
         "po_number":        mock_data["po_number"],
         "reference_quote":  mock_data["quote_id"],
-        "date":             "2026-03-04",
+        "date":             datetime.now().strftime("%Y-%m-%d"),
         "line_items": [
             {
                 "description": item["description"],

@@ -1,8 +1,8 @@
-
 #!/usr/bin/env bash
 # quickstart.sh — MirrorOS demo: Docker Compose up + 5 governed pulses in < 60s
-PYTHON_CMD=$(command -v python3 || command -v python)
 set -euo pipefail
+
+PYTHON_CMD=$(command -v python3 2>/dev/null || command -v python 2>/dev/null || true)
 
 BOLD="\033[1m"
 GREEN="\033[32m"
@@ -13,7 +13,12 @@ echo -e "${BOLD}MirrorOS Quickstart${RESET}"
 echo "---"
 
 # ── Preflight ────────────────────────────────────────────────────────────────
-for cmd in docker $PYTHON_CMD; do
+if [[ -z "$PYTHON_CMD" ]]; then
+  echo -e "${RED}ERROR: neither python3 nor python found. Please install Python and re-run.${RESET}"
+  exit 1
+fi
+
+for cmd in docker; do
   if ! command -v "$cmd" &>/dev/null; then
     echo -e "${RED}ERROR: '$cmd' not found. Please install it and re-run.${RESET}"
     exit 1
