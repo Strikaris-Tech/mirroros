@@ -1,5 +1,7 @@
+
 #!/usr/bin/env bash
 # quickstart.sh — MirrorOS demo: Docker Compose up + 5 governed pulses in < 60s
+PYTHON_CMD=$(command -v python3 || command -v python)
 set -euo pipefail
 
 BOLD="\033[1m"
@@ -11,7 +13,7 @@ echo -e "${BOLD}MirrorOS Quickstart${RESET}"
 echo "---"
 
 # ── Preflight ────────────────────────────────────────────────────────────────
-for cmd in docker python3; do
+for cmd in docker $PYTHON_CMD; do
   if ! command -v "$cmd" &>/dev/null; then
     echo -e "${RED}ERROR: '$cmd' not found. Please install it and re-run.${RESET}"
     exit 1
@@ -43,7 +45,7 @@ echo ""
 echo -e "${BOLD}Running 5 governed demo pulses...${RESET}"
 echo ""
 
-python3 - <<'EOF'
+$PYTHON_CMD - <<'EOF'
 import sys
 import json
 
