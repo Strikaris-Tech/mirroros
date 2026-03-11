@@ -233,6 +233,13 @@ def run(nova, bridge, ledger):
         _verdict(permitted_route, ORCHESTRATOR,
                  f"route_bill('{bill_id}', {amount}, {vendor})",
                  reason_route, latency_route)
+        bridge._log_reasoning(
+            agent=ORCHESTRATOR,
+            action=f"route_bill('{bill_id}', {amount}, {vendor})",
+            status="PERMITTED" if permitted_route else "REJECTED",
+            details={"bill_id": bill_id, "vendor": vendor, "amount": amount,
+                     "reason": reason_route, "latency_ms": round(latency_route, 2)},
+        )
         _seal_line(_seal(ledger, f"ap_{run_date}_{i:03d}_route", "route_bill",
                          ORCHESTRATOR, permitted_route, reason_route,
                          {"bill_id": bill_id, "vendor": vendor, "amount": amount}))
@@ -259,6 +266,14 @@ def run(nova, bridge, ledger):
         _verdict(permitted_approve, routed_agent,
                  f"approve_bill('{bill_id}', {amount})",
                  reason_approve, latency_approve)
+        bridge._log_reasoning(
+            agent=routed_agent,
+            action=f"approve_bill('{bill_id}', {amount})",
+            status="PERMITTED" if permitted_approve else "REJECTED",
+            details={"bill_id": bill_id, "vendor": vendor, "amount": amount,
+                     "routed_agent": routed_agent, "reason": reason_approve,
+                     "latency_ms": round(latency_approve, 2)},
+        )
         _seal_line(_seal(ledger, f"ap_{run_date}_{i:03d}_approve", "approve_bill",
                          routed_agent, permitted_approve, reason_approve,
                          {"bill_id": bill_id, "vendor": vendor, "amount": amount,

@@ -1,0 +1,35 @@
+services:
+
+  forge:
+    build:
+      context: .
+      dockerfile: forge/Dockerfile
+    ports:
+      - "8765:8765"
+    volumes:
+      - ./mrs:/app/mrs
+      - ./ledger:/app/ledger
+      - ./agents:/app/agents
+      - ./mrs/memory:/app/mrs/memory
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - NOVA_ACT_API_KEY=${NOVA_ACT_API_KEY:-}
+      - IMMUDB_HOST=immudb
+      - IMMUDB_PORT=3322
+      - IMMUDB_USER=${IMMUDB_USER:-immudb}
+      - IMMUDB_PASS=${IMMUDB_PASS:-immudb}
+    depends_on:
+      - immudb
+    restart: unless-stopped
+
+  immudb:
+    image: codenotary/immudb:latest
+    ports:
+      - "3322:3322"
+      - "8080:8080"
+    volumes:
+      - immudb_data:/var/lib/immudb
+    restart: unless-stopped
+
+volumes:
+  immudb_data:
