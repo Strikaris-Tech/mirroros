@@ -122,13 +122,15 @@ class MRSBridge:
 
             if codex_laws.exists():
                 # Use list() to consume the generator and catch errors
-                list(self.prolog.query(f"consult('{str(codex_laws)}')"))
+                posix_path = Path(codex_laws).as_posix()
+                list(self.prolog.query(f"consult('{posix_path}')"))
                 self.logger.info(f"Loaded {codex_laws}")
             else:
                 self.logger.warning(f"Codex laws not found: {codex_laws}")
 
             if agent_rules.exists():
-                list(self.prolog.query(f"consult('{str(agent_rules)}')"))
+                posix_agent = Path(agent_rules).as_posix()
+                list(self.prolog.query(f"consult('{posix_agent}')"))
                 self.logger.info(f"Loaded {agent_rules}")
             else:
                 self.logger.warning(f"Agent rules not found: {agent_rules}")
@@ -163,7 +165,8 @@ class MRSBridge:
             )
 
         try:
-            list(self.prolog.query(f"consult('{str(concordance_path)}')"))
+            posix_concordance = Path(concordance_path).as_posix()
+            list(self.prolog.query(f"consult('{posix_concordance}')"))
             self.logger.info(f"Concordance loaded: {concordance_path}")
         except Exception as e:
             raise ConcordanceError(
@@ -432,7 +435,8 @@ class MRSBridge:
             return {"success": False, "reason": f"File not found: {path}"}
 
         try:
-            list(self.prolog.query(f"consult('{str(path)}')"))
+            posix_module = Path(path).as_posix()
+            list(self.prolog.query(f"consult('{posix_module}')"))
             self.logger.info(f"Loaded module: {path}")
             self._log_reasoning(
                 agent="system",
