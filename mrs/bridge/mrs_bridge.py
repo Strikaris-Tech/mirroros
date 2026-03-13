@@ -14,7 +14,12 @@ import time
 
 # Z3 formal verification (optional)
 try:
-    from mrs.verifier.verify_codex import CodexVerifier, VerificationLevel, VerificationStatus
+    from mrs.verifier.verify_codex import (
+        CodexVerifier,
+        VerificationLevel,
+        VerificationStatus,
+    )
+
     Z3_VERIFICATION_AVAILABLE = True
 except ImportError:
     Z3_VERIFICATION_AVAILABLE = False
@@ -24,6 +29,7 @@ except ImportError:
 # immudb ledger (optional — MRS operates without it)
 try:
     from ledger.immudb_client import MRSLedger
+
     LEDGER_AVAILABLE = True
 except ImportError:
     MRSLedger = None  # type: ignore[misc,assignment]
@@ -44,6 +50,7 @@ class ConcordanceError(RuntimeError):
     prolog/concordance.pl and restart. Drift is structurally impossible
     once this gate is passed.
     """
+
     pass
 
 
@@ -58,15 +65,28 @@ class MRSBridge:
     - Dual logging (JSON + text)
     """
 
-    def __init__(self, prolog_path: str = "prolog/", memory_path: str = "memory/", ledger: Optional["MRSLedger"] = None):
+    def __init__(
+        self,
+        prolog_path: str = "prolog/",
+        memory_path: str = "memory/",
+        ledger: Optional["MRSLedger"] = None,
+    ):
         self.prolog = Prolog()
-        
+
         # Get MRS root directory (where this file lives)
         mrs_root = Path(__file__).parent.parent
-        
+
         # Use absolute paths relative to MRS root
-        self.prolog_path = mrs_root / prolog_path if not Path(prolog_path).is_absolute() else Path(prolog_path)
-        self.memory_path = mrs_root / memory_path if not Path(memory_path).is_absolute() else Path(memory_path)
+        self.prolog_path = (
+            mrs_root / prolog_path
+            if not Path(prolog_path).is_absolute()
+            else Path(prolog_path)
+        )
+        self.memory_path = (
+            mrs_root / memory_path
+            if not Path(memory_path).is_absolute()
+            else Path(memory_path)
+        )
 
         # Dual logging setup
         self.reasoning_log_path = self.memory_path / "reasoning_log.json"
@@ -86,7 +106,7 @@ class MRSBridge:
         logging.basicConfig(
             filename=self.bridge_log_path,
             level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s'
+            format="%(asctime)s - %(levelname)s - %(message)s",
         )
         self.logger = logging.getLogger(__name__)
 
@@ -169,9 +189,7 @@ class MRSBridge:
             list(self.prolog.query(f"consult('{posix_concordance}')"))
             self.logger.info(f"Concordance loaded: {concordance_path}")
         except Exception as e:
-            raise ConcordanceError(
-                f"Failed to load prolog/concordance.pl: {e}"
-            )
+            raise ConcordanceError(f"Failed to load prolog/concordance.pl: {e}")
 
         z3_predicates = self._get_z3_surface_predicates()
         self._verify_concordance_coverage(z3_predicates)
@@ -201,9 +219,10 @@ class MRSBridge:
         try:
             from mrs.verifier.essence_runes import EssenceRunes
             from z3 import FuncDeclRef
+
             er = EssenceRunes()
             for attr_name in dir(er):
-                if attr_name.startswith('_'):
+                if attr_name.startswith("_"):
                     continue
                 val = getattr(er, attr_name, None)
                 if isinstance(val, FuncDeclRef):
@@ -237,9 +256,9 @@ class MRSBridge:
         missing = []
         for name in z3_predicates:
             safe_name = name.replace("'", "\\'")
-            result = list(self.prolog.query(
-                f"concordance(z3, '{safe_name}', prolog, _, _)"
-            ))
+            result = list(
+                self.prolog.query(f"concordance(z3, '{safe_name}', prolog, _, _)")
+            )
             if not result:
                 missing.append(name)
 
@@ -250,8 +269,8 @@ class MRSBridge:
                 status="VIOLATION",
                 details={
                     "missing_mappings": missing,
-                    "checked_count": len(z3_predicates)
-                }
+                    "checked_count": len(z3_predicates),
+                },
             )
             raise ConcordanceError(
                 f"Concordance drift detected at boot — "
@@ -264,7 +283,7 @@ class MRSBridge:
             agent="system",
             action="boot_concordance_check",
             status="VALID",
-            details={"verified_count": len(z3_predicates)}
+            details={"verified_count": len(z3_predicates)},
         )
 
     def _translate_fact_via_concordance(self, fact: str) -> Optional[Dict[str, Any]]:
@@ -287,30 +306,34 @@ class MRSBridge:
         """
         try:
             safe_fact = fact.replace("'", "\\'")
-            parse_result = list(self.prolog.query(
-                f"term_to_atom(T, '{safe_fact}'), functor(T, PrologName, Arity)"
-            ))
+            parse_result = list(
+                self.prolog.query(
+                    f"term_to_atom(T, '{safe_fact}'), functor(T, PrologName, Arity)"
+                )
+            )
             if not parse_result:
                 return None
 
-            prolog_name = str(parse_result[0]['PrologName'])
-            arity = int(parse_result[0]['Arity'])
+            prolog_name = str(parse_result[0]["PrologName"])
+            arity = int(parse_result[0]["Arity"])
 
-            concordance_result = list(self.prolog.query(
-                f"concordance(z3, Z3Name, prolog, {prolog_name}, ArgSorts), "
-                f"length(ArgSorts, {arity})"
-            ))
+            concordance_result = list(
+                self.prolog.query(
+                    f"concordance(z3, Z3Name, prolog, {prolog_name}, ArgSorts), "
+                    f"length(ArgSorts, {arity})"
+                )
+            )
             if not concordance_result:
                 return None  # Not in vocabulary — Z3 gate skips
 
-            z3_name = str(concordance_result[0]['Z3Name'])
-            arg_sorts = [str(s) for s in concordance_result[0]['ArgSorts']]
+            z3_name = str(concordance_result[0]["Z3Name"])
+            arg_sorts = [str(s) for s in concordance_result[0]["ArgSorts"]]
 
             return {
-                'z3_name': z3_name,
-                'prolog_name': prolog_name,
-                'arity': arity,
-                'arg_sorts': arg_sorts
+                "z3_name": z3_name,
+                "prolog_name": prolog_name,
+                "arity": arity,
+                "arg_sorts": arg_sorts,
             }
         except Exception as e:
             self.logger.debug(f"Concordance translation failed for {fact!r}: {e}")
@@ -340,20 +363,20 @@ class MRSBridge:
 
             er = EssenceRunes()
             sort_map = {
-                'agent':    er.Agent,
-                'resource': er.Resource,
-                'action':   er.Action,
-                'domain':   er.Domain,
-                'evidence': er.Evidence,
+                "agent": er.Agent,
+                "resource": er.Resource,
+                "action": er.Action,
+                "domain": er.Domain,
+                "evidence": er.Evidence,
             }
 
-            z3_name = translation['z3_name']
-            arg_sorts = translation['arg_sorts']
+            z3_name = translation["z3_name"]
+            arg_sorts = translation["arg_sorts"]
 
             # Find the Z3 Function by name
             z3_func = None
             for attr in dir(er):
-                if attr.startswith('_'):
+                if attr.startswith("_"):
                     continue
                 val = getattr(er, attr, None)
                 if isinstance(val, FuncDeclRef) and val.name() == z3_name:
@@ -362,20 +385,20 @@ class MRSBridge:
 
             if z3_func is None:
                 return {
-                    'status': 'UNKNOWN',
-                    'reason': f"Z3 Function '{z3_name}' not found in EssenceRunes",
-                    'z3_name': z3_name
+                    "status": "UNKNOWN",
+                    "reason": f"Z3 Function '{z3_name}' not found in EssenceRunes",
+                    "z3_name": z3_name,
                 }
 
             # Arity guard
             if z3_func.arity() != len(arg_sorts):
                 return {
-                    'status': 'VIOLATION',
-                    'reason': (
+                    "status": "VIOLATION",
+                    "reason": (
                         f"Arity mismatch: concordance declares {len(arg_sorts)} "
                         f"arg(s) for '{z3_name}' but Z3 Function has {z3_func.arity()}"
                     ),
-                    'z3_name': z3_name
+                    "z3_name": z3_name,
                 }
 
             # Resolve sorts — unknown sorts yield UNKNOWN (graceful skip)
@@ -384,11 +407,11 @@ class MRSBridge:
                 z3_sort = sort_map.get(sort_name)
                 if z3_sort is None:
                     return {
-                        'status': 'UNKNOWN',
-                        'reason': f"Sort '{sort_name}' not available in EssenceRunes",
-                        'z3_name': z3_name
+                        "status": "UNKNOWN",
+                        "reason": f"Sort '{sort_name}' not available in EssenceRunes",
+                        "z3_name": z3_name,
                     }
-                constants.append(Const(f'_x{i}', z3_sort))
+                constants.append(Const(f"_x{i}", z3_sort))
 
             # Check satisfiability: can this predicate hold with the L1+L2 axioms?
             solver = Solver()
@@ -400,20 +423,20 @@ class MRSBridge:
             check_result = solver.check()
             if check_result == sat:
                 return {
-                    'status': 'VALID',
-                    'z3_name': z3_name,
-                    'verified_arity': len(constants)
+                    "status": "VALID",
+                    "z3_name": z3_name,
+                    "verified_arity": len(constants),
                 }
             else:
                 return {
-                    'status': 'VIOLATION',
-                    'reason': 'Structurally unsatisfiable with L1+L2 axioms',
-                    'z3_name': z3_name
+                    "status": "VIOLATION",
+                    "reason": "Structurally unsatisfiable with L1+L2 axioms",
+                    "z3_name": z3_name,
                 }
 
         except Exception as e:
             self.logger.warning(f"Z3 structural verification error: {e}")
-            return {'status': 'ERROR', 'error': str(e)}
+            return {"status": "ERROR", "error": str(e)}
 
     def load_module(self, module_path: str) -> Dict[str, Any]:
         """
@@ -442,7 +465,7 @@ class MRSBridge:
                 agent="system",
                 action=f"load_module({module_path})",
                 status="ASSERTED",
-                details={"module": str(path)}
+                details={"module": str(path)},
             )
             return {"success": True, "module": str(path)}
         except Exception as e:
@@ -465,7 +488,7 @@ class MRSBridge:
         audit_data = {
             "exported_at": datetime.now().isoformat(),
             "reasoning_log": [],
-            "outcomes": []
+            "outcomes": [],
         }
 
         if self.reasoning_log_path.exists():
@@ -483,7 +506,7 @@ class MRSBridge:
                 self.logger.warning("Could not read outcomes log for export")
 
         try:
-            with open(export_path, 'w') as f:
+            with open(export_path, "w") as f:
                 json.dump(audit_data, f, indent=2)
             self.logger.info(f"Exported audit trail: {export_path}")
             return {"success": True, "path": str(export_path)}
@@ -508,8 +531,10 @@ class MRSBridge:
             "codex_loaded": False,
             "concordance_verified": self._concordance_verified,
             "concordance_predicate_count": self._concordance_predicate_count,
-            "ledger_available": self.ledger.is_available() if self.ledger is not None else False,
-            "error": None
+            "ledger_available": self.ledger.is_available()
+            if self.ledger is not None
+            else False,
+            "error": None,
         }
 
         try:
@@ -553,10 +578,7 @@ class MRSBridge:
         return f"outcome_{date_str}_{hash_suffix}"
 
     def assert_fact(
-        self,
-        fact: str,
-        agent: Optional[str] = None,
-        verification_level: str = "fast"
+        self, fact: str, agent: Optional[str] = None, verification_level: str = "fast"
     ) -> Dict[str, Any]:
         """
         Assert a new fact into the reasoning system through the dual gate.
@@ -606,13 +628,13 @@ class MRSBridge:
                 "action_id": action_id,
                 "prolog_verdict": prolog_verdict,
                 "z3_verdict": z3_verdict,
-                "contradiction": "Prolog permits but Z3 structural gate rejects"
+                "contradiction": "Prolog permits but Z3 structural gate rejects",
             }
             self._log_reasoning(
                 agent=agent or "system",
                 action=f"assert({fact})",
                 status="CONTRADICTION",
-                details=details
+                details=details,
             )
             self.logger.warning(
                 f"CONTRADICTION on {fact!r}: Prolog permits, Z3 rejects "
@@ -624,7 +646,7 @@ class MRSBridge:
                 "prolog_verdict": prolog_verdict,
                 "z3_verdict": z3_verdict,
                 "timestamp": timestamp,
-                "action_id": action_id
+                "action_id": action_id,
             }
 
         # ── Prolog rejected (Prolog is Law) ───────────────────────────────────
@@ -642,7 +664,7 @@ class MRSBridge:
                 "violations": prolog_violations,
                 "action_id": action_id,
                 "prolog_verdict": prolog_verdict,
-                "z3_verdict": z3_verdict
+                "z3_verdict": z3_verdict,
             }
             if z3_proof:
                 details["z3_proof"] = z3_proof
@@ -651,7 +673,7 @@ class MRSBridge:
                 agent=agent or "system",
                 action=f"assert({fact})",
                 status="REJECTED",
-                details=details
+                details=details,
             )
             return {
                 "success": False,
@@ -660,7 +682,7 @@ class MRSBridge:
                 "prolog_verdict": prolog_verdict,
                 "z3_verdict": z3_verdict,
                 "timestamp": timestamp,
-                "action_id": action_id
+                "action_id": action_id,
             }
 
         # ── Both gates passed (or Z3 SKIP/UNKNOWN): commit ───────────────────
@@ -678,7 +700,7 @@ class MRSBridge:
                 "fact": fact,
                 "action_id": action_id,
                 "prolog_verdict": prolog_verdict,
-                "z3_verdict": z3_verdict
+                "z3_verdict": z3_verdict,
             }
             if z3_status not in ("SKIP", "UNKNOWN", "ERROR"):
                 details["dual_gate"] = True
@@ -689,7 +711,7 @@ class MRSBridge:
                 agent=agent or "system",
                 action=f"assert({fact})",
                 status="ASSERTED",
-                details=details
+                details=details,
             )
 
             result = {
@@ -699,7 +721,7 @@ class MRSBridge:
                 "agent": agent,
                 "action_id": action_id,
                 "prolog_verdict": prolog_verdict,
-                "z3_verdict": z3_verdict
+                "z3_verdict": z3_verdict,
             }
             if z3_proof:
                 result["z3_proof"] = z3_proof
@@ -711,7 +733,7 @@ class MRSBridge:
                 "success": False,
                 "reason": str(e),
                 "timestamp": timestamp,
-                "action_id": action_id
+                "action_id": action_id,
             }
 
     def query(self, query_str: str, max_results: int = 100) -> List[Dict[str, Any]]:
@@ -759,13 +781,15 @@ class MRSBridge:
             details={
                 "goal": goal,
                 "results_count": len(results),
-                "results": results[:10]  # Log first 10
-            }
+                "results": results[:10],  # Log first 10
+            },
         )
 
         return results
 
-    def check_authorization(self, agent: str, action: str, target: str) -> bool:
+    def check_authorization(
+        self, agent: str, action: str, target: str
+    ) -> Dict[str, Any]:
         """
         Check if agent is authorized to perform action on target.
 
@@ -775,18 +799,52 @@ class MRSBridge:
             target: Target resource
 
         Returns:
-            True if authorized, False otherwise
+            Dict with keys: permitted (bool), reason (str), latency_ms (float)
         """
+        start = time.perf_counter()
+
         query = f"can_act({agent}, {action}({target}))"
         results = self.query(query)
-
         authorized = len(results) > 0
+
+        # Check for Codex violations on rejection
+        reason = ""
+        if not authorized:
+            violations = self._check_violations(agent, action)
+            reason = (
+                "; ".join(violations)
+                if violations
+                else f"No rule permits {agent} -> {action}({target})"
+            )
+        else:
+            reason = f"Authorized by can_act({agent}, {action}({target}))"
+
+        elapsed_ms = (time.perf_counter() - start) * 1000
 
         self.logger.info(
             f"Authorization check: {agent} -> {action}({target}) = {authorized}"
         )
 
-        return authorized
+        verdict = {
+            "permitted": authorized,
+            "reason": reason,
+            "latency_ms": round(elapsed_ms, 2),
+        }
+
+        # Log reasoning for audit trail
+        status = "PERMITTED" if authorized else "REJECTED"
+        self._log_reasoning(
+            agent,
+            action,
+            status,
+            {
+                "target": target,
+                "latency_ms": verdict["latency_ms"],
+                "reason": reason,
+            },
+        )
+
+        return verdict
 
     def _check_violations(self, agent: str, action: str) -> List[str]:
         """Check if action violates Codex laws"""
@@ -811,13 +869,13 @@ class MRSBridge:
     def _verify_with_z3(self, agent: str, action: str) -> Optional[Dict[str, Any]]:
         """
         Perform Z3 formal verification on action.
-        
+
         Parses action string and calls appropriate Z3 verifier method.
         Returns proof artifact dictionary or None if verification not applicable.
         """
         if not self.verifier:
             return None
-        
+
         try:
             # Parse action for budget compliance verification
             if "purchase(" in action:
@@ -825,27 +883,27 @@ class MRSBridge:
                 # Format: purchase(item, amount) or purchase(item)
                 amount = self._extract_purchase_amount(agent, action)
                 budget = self._get_agent_budget_limit(agent)
-                
+
                 if amount is not None and budget is not None:
                     proof = self.verifier.verify_budget_compliance(
                         agent=agent,
                         action=action,
                         budget_limit=budget,
-                        action_amount=amount
+                        action_amount=amount,
                     )
                     return proof.to_dict()
-            
+
             # Add more verification types here (oath integrity, memory sovereignty, etc.)
-            
+
             return None
-            
+
         except Exception as e:
             self.logger.warning(f"Z3 verification failed: {e}")
             return {
                 "status": "ERROR",
                 "error": str(e),
                 "agent": agent,
-                "action": action
+                "action": action,
             }
 
     def _extract_purchase_amount(self, agent: str, action: str) -> Optional[int]:
@@ -854,7 +912,8 @@ class MRSBridge:
             # Query Prolog for the action amount
             # This assumes action is something like purchase(item, amount)
             import re
-            match = re.search(r'purchase\([^,]+,\s*(\d+)\)', action)
+
+            match = re.search(r"purchase\([^,]+,\s*(\d+)\)", action)
             if match:
                 return int(match.group(1))
             return None
@@ -866,26 +925,24 @@ class MRSBridge:
         try:
             results = self.query(f"agent_budget_limit({agent}, Limit)")
             if results and len(results) > 0:
-                return results[0].get('Limit')
+                return results[0].get("Limit")
             return None
         except Exception:
             return None
 
     def _log_reasoning(
-        self,
-        agent: str,
-        action: str,
-        status: str,
-        details: Dict[str, Any]
+        self, agent: str, action: str, status: str, details: Dict[str, Any]
     ):
         """Log reasoning step to JSON file"""
-        self.logger.debug(f"_log_reasoning called: agent={agent}, action={action}, status={status}")
+        self.logger.debug(
+            f"_log_reasoning called: agent={agent}, action={action}, status={status}"
+        )
         log_entry = {
             "timestamp": datetime.now().isoformat(),
             "agent": agent,
             "action": action,
             "status": status,
-            "details": details
+            "details": details,
         }
         self.logger.debug(f"  Log entry: {log_entry}")
 
@@ -893,7 +950,9 @@ class MRSBridge:
         logs = []
         if self.reasoning_log_path.exists():
             try:
-                self.logger.debug(f"  Loading existing log from: {self.reasoning_log_path}")
+                self.logger.debug(
+                    f"  Loading existing log from: {self.reasoning_log_path}"
+                )
                 with open(self.reasoning_log_path) as f:
                     logs = json.load(f)
                 self.logger.debug(f"  Loaded {len(logs)} existing entries")
@@ -901,7 +960,9 @@ class MRSBridge:
                 self.logger.warning(f"Corrupted reasoning log, starting fresh: {e}")
                 logs = []
         else:
-            self.logger.debug(f"  Log file doesn't exist yet: {self.reasoning_log_path}")
+            self.logger.debug(
+                f"  Log file doesn't exist yet: {self.reasoning_log_path}"
+            )
 
         # Append new entry
         logs.append(log_entry)
@@ -910,7 +971,7 @@ class MRSBridge:
         # Write back
         try:
             self.logger.debug(f"  Writing to: {self.reasoning_log_path}")
-            with open(self.reasoning_log_path, 'w') as f:
+            with open(self.reasoning_log_path, "w") as f:
                 json.dump(logs, f, indent=2)
             self.logger.debug("  ✓ Successfully wrote reasoning log")
         except Exception as e:
@@ -928,10 +989,7 @@ class MRSBridge:
                 self.logger.warning(f"Ledger seal skipped (non-fatal): {e}")
 
     def get_reasoning_history(
-        self,
-        agent: Optional[str] = None,
-        limit: int = 50,
-        verdicts_only: bool = False
+        self, agent: Optional[str] = None, limit: int = 50, verdicts_only: bool = False
     ) -> List[Dict[str, Any]]:
         """
         Retrieve reasoning history with optional filtering.
@@ -960,7 +1018,8 @@ class MRSBridge:
         if verdicts_only:
             gate_statuses = {"ASSERTED", "REJECTED", "CONTRADICTION"}
             logs = [
-                log for log in logs
+                log
+                for log in logs
                 if log.get("status") in gate_statuses
                 and "prolog_verdict" in log.get("details", {})
             ]
@@ -969,9 +1028,7 @@ class MRSBridge:
         return logs[-limit:]
 
     def batch_assert(
-        self,
-        facts: List[str],
-        agent: Optional[str] = None
+        self, facts: List[str], agent: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Assert multiple facts in batch.
@@ -983,12 +1040,7 @@ class MRSBridge:
         Returns:
             Summary of successes and failures
         """
-        results = {
-            "total": len(facts),
-            "succeeded": 0,
-            "failed": 0,
-            "violations": []
-        }
+        results = {"total": len(facts), "succeeded": 0, "failed": 0, "violations": []}
 
         for fact in facts:
             result = self.assert_fact(fact, agent)
@@ -1011,7 +1063,7 @@ class MRSBridge:
         expected: str,
         actual: str,
         success: bool,
-        metadata: Optional[Dict[str, Any]] = None
+        metadata: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """
         Record the outcome of a previously logged action.
@@ -1055,7 +1107,7 @@ class MRSBridge:
             "expected": expected,
             "actual": actual,
             "success": success,
-            "metadata": metadata or {}
+            "metadata": metadata or {},
         }
 
         # Log to outcomes file
@@ -1068,11 +1120,7 @@ class MRSBridge:
             f"Outcome recorded: {outcome_id} for action {action_id} (success={success})"
         )
 
-        return {
-            "success": True,
-            "outcome_id": outcome_id,
-            "action_id": action_id
-        }
+        return {"success": True, "outcome_id": outcome_id, "action_id": action_id}
 
     def _get_action_type(self, action_id: str) -> str:
         """Extract action type from action_id's log entry"""
@@ -1120,7 +1168,7 @@ class MRSBridge:
 
         outcomes.append(outcome_entry)
 
-        with open(self.outcomes_log_path, 'w') as f:
+        with open(self.outcomes_log_path, "w") as f:
             json.dump(outcomes, f, indent=2)
 
     def _link_outcome_to_action(self, action_id: str, outcome_id: str):
@@ -1139,7 +1187,7 @@ class MRSBridge:
                 log["details"]["outcomes"].append(outcome_id)
                 break
 
-        with open(self.reasoning_log_path, 'w') as f:
+        with open(self.reasoning_log_path, "w") as f:
             json.dump(logs, f, indent=2)
 
     def get_outcomes_for_action(self, action_id: str) -> List[Dict[str, Any]]:
