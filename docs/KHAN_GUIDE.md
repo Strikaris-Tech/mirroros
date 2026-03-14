@@ -100,7 +100,7 @@ bash quickstart.sh
 
 ### LedgerLark Invoice UI (Docker + browser, no Zoho account needed)
 ```powershell
-docker compose exec forge python examples/accounting_demo/server.py
+docker compose exec -w /app forge python examples/accounting_demo/server.py
 ```
 Open **http://localhost:7242**. Click approve/reject manually, or run Nova Act from the host:
 ```powershell
@@ -109,7 +109,7 @@ python examples/accounting_demo/nova_demo.py
 
 ### LedgerLark AP Orchestration — terminal only (Docker, no API key)
 ```powershell
-docker compose exec forge python examples/ledgerlark_demo/ap_demo.py --no-browser
+docker compose exec -w /app forge python examples/ledgerlark_demo/ap_demo.py --no-browser
 ```
 
 ### LedgerLark AP Orchestration — with Nova Act (runs on host)

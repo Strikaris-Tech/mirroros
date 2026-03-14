@@ -197,7 +197,7 @@ docker compose up -d        # starts immudb ledger (optional — falls back to J
 
 **Demo 2 — LedgerLark Invoice UI** (no Zoho account required):
 ```bash
-docker compose exec forge python examples/accounting_demo/server.py
+docker compose exec -w /app forge python examples/accounting_demo/server.py
 # open http://localhost:7242
 # optional: python examples/accounting_demo/nova_demo.py  (Nova Act, runs on host)
 ```
@@ -205,7 +205,7 @@ docker compose exec forge python examples/accounting_demo/server.py
 **Demo 3 — AP Orchestration with Zoho Books** (Nova Act API key required):
 ```bash
 # terminal-only (Docker):
-docker compose exec forge python examples/ledgerlark_demo/ap_demo.py --no-browser
+docker compose exec -w /app forge python examples/ledgerlark_demo/ap_demo.py --no-browser
 
 # with Nova Act (runs on host — controls real browser):
 export NOVA_ACT_API_KEY=your-key
