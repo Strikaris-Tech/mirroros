@@ -12,6 +12,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY forge/ ./forge/
 COPY mrs/ ./mrs/
 COPY ledger/ ./ledger/
+COPY examples/ ./examples/
 
 WORKDIR /app/forge
 
