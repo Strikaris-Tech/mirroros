@@ -149,6 +149,9 @@ Known issue — AWS account-level restriction being resolved. Use mock mode for 
 **`docker compose exec` hangs or errors**
 Make sure services are up: `docker compose ps`. If forge is not running, check `docker compose logs forge`.
 
+**`"z3_verdict": {"error": "No module named 'mrs.verifier.essence_runes'"}`  in reasoning_log.json**
+Expected — `essence_runes.py` is intentionally excluded from the public repo. The Z3 gate skips cleanly (shows `"z3_verdict": "SKIP"` not an error). This does not affect the Prolog gate or any demo output. Not a bug.
+
 ---
 
 ## Kevin's Open Items
