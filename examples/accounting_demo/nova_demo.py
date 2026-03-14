@@ -285,7 +285,41 @@ def run():
 
     # ── Execute with or without Nova Act ─────────────────────────────────────
     if nova_available and _nova_import:
-        with NovaAct(starting_page="http://localhost:7242", ignore_https_errors=True) as nova:
+        import socket
+        from pathlib import Path as _Path
+        CDP_PORT = 9222
+        CHROME_BIN = "/Applications/Chromium.app/Contents/MacOS/Chromium"
+
+        def _cdp_running():
+            with socket.socket() as s:
+                return s.connect_ex(("localhost", CDP_PORT)) == 0
+
+        if _Path(CHROME_BIN).exists():
+            if not _cdp_running():
+                import subprocess
+                profile_dir = _Path.home() / ".mirroros" / "strikaris_profile"
+                profile_dir.mkdir(parents=True, exist_ok=True)
+                subprocess.Popen([
+                    CHROME_BIN,
+                    f"--remote-debugging-port={CDP_PORT}",
+                    f"--user-data-dir={profile_dir}",
+                    "--no-first-run", "--no-default-browser-check",
+                    "--window-size=1600,900",
+                ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                for _ in range(20):
+                    time.sleep(0.5)
+                    if _cdp_running():
+                        break
+            nova_kwargs = dict(
+                cdp_endpoint_url=f"http://localhost:{CDP_PORT}",
+                starting_page="http://localhost:7242",
+                ignore_https_errors=True,
+                ignore_screen_dims_check=True,
+            )
+        else:
+            nova_kwargs = dict(starting_page="http://localhost:7242", ignore_https_errors=True)
+
+        with NovaAct(**nova_kwargs) as nova:
             _run_with_nova(nova)
     else:
         _run_with_nova(None)
