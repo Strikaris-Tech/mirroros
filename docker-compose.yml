@@ -8,6 +8,7 @@ services:
       dockerfile: forge/Dockerfile
     ports:
       - "${FORGE_PORT:-8767}:8765"
+      - "7242:7242"
     volumes:
       - ./mrs:/app/mrs
       - ./ledger:/app/ledger
