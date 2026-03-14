@@ -67,6 +67,23 @@ pip install z3-solver --prefer-binary
 
 ---
 
+## Step 4b — Docker (optional, for ledger sealing)
+
+Docker is only needed if you want immudb running locally so the demo seals verdicts to the tamper-proof ledger. The demo runs fine without it — it falls back to JSON-only logging.
+
+If you want immudb:
+
+1. Install [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop/)
+2. From the repo root:
+
+```powershell
+docker compose up -d immudb
+```
+
+immudb will be available at `localhost:3324` (port intentionally offset from 3322 to avoid conflicts with other MirrorOS instances).
+
+---
+
 ## Step 5 — Nova Act API Key
 
 Get your key from [nova.amazon.com/act](https://nova.amazon.com/act).
@@ -101,7 +118,18 @@ Run the terminal-only demo (no browser, no API keys needed):
 python examples/ledgerlark_demo/ap_demo.py --no-browser
 ```
 
-You should see 4 expenses processed with PERMITTED/REJECTED verdicts and `z3_verdict: VALID` in the reasoning log. If you see errors:
+You should see 4 expenses processed with PERMITTED/REJECTED verdicts and `z3_verdict: VALID` in the reasoning log.
+
+For the raw governance pulse demo (5 pulses, no Zoho, no Nova Act):
+
+```powershell
+# Requires Git Bash or WSL — quickstart.sh is a bash script
+bash quickstart.sh
+```
+
+This spins up Docker, waits for Forge, then fires 5 MRS pulses — useful for showing the core decision engine without any browser automation.
+
+If you see errors:
 
 - `SWI-Prolog not found` → Step 2 PATH issue
 - `ModuleNotFoundError` → re-run Step 4
@@ -118,7 +146,7 @@ $env:NOVA_ACT_API_KEY = "your-key"
 python examples/ledgerlark_demo/ap_demo.py
 ```
 
-> Note: On Windows the demo launches Nova Act's default browser rather than ungoogled-chromium (which is the macOS setup). The CDP profile trick Brandon uses is Mac-specific — on Windows Nova Act manages the browser directly. Zoho login will be prompted on first run; credentials are saved to Nova Act's profile.
+> Note: On Windows, Nova Act manages its own browser automatically — you don't need Chromium installed. The demo detects whether ungoogled-chromium is present; if not, it hands control to Nova Act's built-in browser. Zoho login will be prompted on first run; credentials are saved to Nova Act's profile.
 
 ---
 
@@ -136,12 +164,14 @@ python examples/zoho_demo/quote_demo.py --live           # real Nova Vision (nee
 python examples/zoho_demo/quote_demo.py --seed 99        # exception path demo
 ```
 
-### Invoice Approval (original demo)
+### LedgerLark Invoice UI (browser, no Zoho account needed)
 ```powershell
-# Terminal 1
+# Terminal 1 — starts the UI server
 python examples/accounting_demo/server.py
-
-# Terminal 2
+```
+Then open **http://localhost:7242** in your browser. You'll see the invoice approval page with live MRS verdicts. You can click approve/reject manually, or run Terminal 2 to have Nova Act do it:
+```powershell
+# Terminal 2 — Nova Act automation (optional)
 python examples/accounting_demo/nova_demo.py
 ```
 

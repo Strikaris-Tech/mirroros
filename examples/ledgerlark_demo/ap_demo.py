@@ -350,19 +350,26 @@ if __name__ == "__main__":
             print(f"{RED}nova-act not installed: pip install nova-act{RESET}")
             sys.exit(1)
 
-        if not _cdp_running():
-            print(f"{DIM}Launching ungoogled-chromium on CDP port {CDP_PORT}...{RESET}")
-            _launch_chromium()
-            print(f"{GREEN}Browser ready.{RESET}  Profile: {PROFILE_DIR}\n")
-        else:
-            print(f"{DIM}Connecting to existing browser on port {CDP_PORT}.{RESET}\n")
+        chromium_available = Path(CHROME_BIN).exists()
 
-        with NovaAct(
-            cdp_endpoint_url=f"http://localhost:{CDP_PORT}",
-            starting_page=ZOHO_EXPENSES,
-            ignore_https_errors=True,
-            ignore_screen_dims_check=True,
-        ) as nova:
+        if chromium_available:
+            if not _cdp_running():
+                print(f"{DIM}Launching ungoogled-chromium on CDP port {CDP_PORT}...{RESET}")
+                _launch_chromium()
+                print(f"{GREEN}Browser ready.{RESET}  Profile: {PROFILE_DIR}\n")
+            else:
+                print(f"{DIM}Connecting to existing browser on port {CDP_PORT}.{RESET}\n")
+            nova_kwargs = dict(
+                cdp_endpoint_url=f"http://localhost:{CDP_PORT}",
+                starting_page=ZOHO_EXPENSES,
+                ignore_https_errors=True,
+                ignore_screen_dims_check=True,
+            )
+        else:
+            print(f"{DIM}Chromium not found — Nova Act will manage its own browser.{RESET}\n")
+            nova_kwargs = dict(starting_page=ZOHO_EXPENSES)
+
+        with NovaAct(**nova_kwargs) as nova:
             run(nova, bridge, ledger)
     else:
         run(None, bridge, ledger)

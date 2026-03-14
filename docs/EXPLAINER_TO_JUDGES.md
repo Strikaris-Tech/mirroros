@@ -113,9 +113,11 @@ it is upstream of it.
 
 ---
 
-## The Demo Scenario
+## The Demo Scenarios
 
-Five governed pulses. Two agents. One invoice page. Every decision sealed.
+### 1 — Governance pulses (terminal, no API key required)
+
+Five pulses. Two agents. Every decision sealed.
 
 | # | Agent | Action | MRS Result | Why |
 |---|-------|--------|------------|-----|
@@ -125,14 +127,15 @@ Five governed pulses. Two agents. One invoice page. Every decision sealed.
 | 4 | auditor | Approve inv_002 ($25,000) | PERMITTED | Within auditor limit ($50,000) |
 | 5 | auditor | Compliance check | PERMITTED | Read-only, always permitted |
 
-**What you see during the demo:**
-- Browser opens on the invoice approval page
-- For PERMITTED actions: Nova Act clicks Approve — invoice status updates
-- For REJECTED actions: Nova Act never moves — terminal shows the specific
-  Prolog predicate that blocked it
-- After all pulses: `python -m ledger.verify action_..._002` returns
-  `"verified": true` — cryptographic proof the rejection was recorded
-  at the time it happened, and has not been altered
+Terminal shows PERMITTED / REJECTED with the specific Prolog predicate that blocked each rejection and the gate latency in milliseconds. After all pulses, `python -m ledger.verify` returns `"verified": true` — cryptographic proof the record has not been altered.
+
+### 2 — LedgerLark Invoice UI (browser, no Zoho account required)
+
+Same MRS gates, now with a live UI. Start the server and open the invoice approval page in any browser — Nova Act (optional) will click through approvals and the page updates in real time. REJECTED actions are blocked before the browser is touched; the UI reflects the MRS verdict, not a button click.
+
+### 3 — LedgerLark AP Orchestration (Zoho Books, Nova Act)
+
+Four bills. LedgerLark routes each bill to the correct agent via Gate 1, the agent approves via Gate 2, Nova Act records approved expenses in Zoho Books. Unknown vendors and overlimit amounts are blocked at the gate — Zoho is never opened for rejected bills.
 
 ---
 
@@ -184,12 +187,28 @@ but as the substrate.
 ```bash
 git clone https://github.com/Strikaris-Tech/mirroros-core
 cd mirroros-core
-docker compose up
+docker compose up -d        # starts immudb ledger (optional — falls back to JSON)
+```
+
+**Demo 1 — Governance pulses** (no API keys required):
+```bash
 ./quickstart.sh
 ```
 
-Five governed pulses in under 60 seconds. No API keys required for the
-core MRS demo. Nova Act integration requires an Amazon Nova Act API key.
+**Demo 2 — LedgerLark Invoice UI** (no Zoho account required):
+```bash
+python examples/accounting_demo/server.py
+# open http://localhost:7242
+# optional: python examples/accounting_demo/nova_demo.py  (Nova Act automation)
+```
+
+**Demo 3 — AP Orchestration with Zoho Books** (Nova Act API key required):
+```bash
+export NOVA_ACT_API_KEY=your-key
+python examples/ledgerlark_demo/ap_demo.py
+# terminal-only fallback:
+python examples/ledgerlark_demo/ap_demo.py --no-browser
+```
 
 ---
 

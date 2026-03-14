@@ -1,0 +1,74 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+.venv
+venv
+env
+ENV
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info
+dist
+build
+.eggs
+.pytest_cache
+.mypy_cache
+.coverage
+htmlcov
+.tox
+
+# IDEs
+.vscode
+.idea
+*.swp
+*.swo
+.DS_Store
+
+# Documentation
+*.md
+README*
+CHANGELOG*
+LICENSE*
+docs/
+
+# Runtime state (mounted as volumes at runtime)
+mrs/memory/
+memory/
+
+# immudb runtime data
+mrs/data/
+
+# Node modules (installed fresh during build)
+mrs/console/node_modules/
+
+# Build artifacts
+*.log
+*.tmp
+*.temp
+logs/
+
+# Database files
+*.sqlite
+*.sqlite3
+*.db
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Cache
+.cache/
+*.pickle
+
+# Jupyter
+.ipynb_checkpoints
+*.ipynb
