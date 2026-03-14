@@ -21,7 +21,7 @@ fi
 
 # ── Bring up services ────────────────────────────────────────────────────────
 echo "Starting services..."
-docker compose up -d --build 2>&1 | grep -E "Started|Running|built|error" || true
+docker compose up -d --build --force-recreate 2>&1 | grep -E "Started|Running|built|error|Built" || true
 
 # Wait for Forge to be reachable
 echo "Waiting for Forge API (port ${FORGE_PORT})..."
