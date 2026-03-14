@@ -104,18 +104,13 @@ python examples/accounting_demo/nova_demo.py    # terminal 2
 
 ## Prerequisites
 
-**Quickstart only needs Docker.** Everything runs inside the container.
+**Docker is all you need** — Python and SWI-Prolog run inside the container.
 
-To run demos directly (outside Docker), you also need:
+Nova Act browser automation is the only thing that runs on the host (it controls a real browser). For those demos you also need:
 ```bash
-pip install -r forge/requirements.txt
-pip install z3-solver reportlab nova-act
+pip install nova-act
+export NOVA_ACT_API_KEY=<key>
 ```
-
-SWI-Prolog must be on PATH:
-- macOS: `brew install swi-prolog`
-- Ubuntu: `apt install swi-prolog`
-- Windows: see `docs/KHAN_GUIDE.md`
 
 ---
 
@@ -125,20 +120,34 @@ SWI-Prolog must be on PATH:
 bash quickstart.sh
 ```
 
-Docker only — no local Python or Prolog install needed. Brings up Forge + immudb, runs 5 governed pulses, prints PERMITTED / REJECTED verdicts with latency.
+Brings up Forge + immudb, runs 5 governed pulses, prints PERMITTED / REJECTED verdicts with latency. Docker only.
 
-**To run demos directly (no Docker):**
+---
 
+## Running the Demos
+
+**Start services first:**
 ```bash
-# LedgerLark Invoice UI — open http://localhost:7242 after starting
-python examples/accounting_demo/server.py       # terminal 1 (no API key needed)
-python examples/accounting_demo/nova_demo.py    # terminal 2 (Nova Act automation, optional)
+docker compose up -d
+```
 
-# LedgerLark AP Orchestration — Zoho Books
-python examples/ledgerlark_demo/ap_demo.py --no-browser   # terminal only
-python examples/ledgerlark_demo/ap_demo.py                 # with Nova Act
+**LedgerLark Invoice UI** — no API key needed, open `http://localhost:7242`:
+```bash
+docker compose exec forge python examples/accounting_demo/server.py
+```
 
-# Zoho Quote-to-Cash
+**LedgerLark AP Orchestration** — terminal only, no API key needed:
+```bash
+docker compose exec forge python examples/ledgerlark_demo/ap_demo.py --no-browser
+```
+
+**LedgerLark AP Orchestration** — with Nova Act (runs on host, controls browser):
+```bash
+python examples/ledgerlark_demo/ap_demo.py
+```
+
+**Zoho Quote-to-Cash** — with Nova Act:
+```bash
 python examples/zoho_demo/quote_demo.py          # mock Nova Vision
 python examples/zoho_demo/quote_demo.py --live   # real Nova Vision (needs AWS)
 ```

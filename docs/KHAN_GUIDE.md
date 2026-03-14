@@ -8,11 +8,12 @@ Getting MirrorOS running on Windows for the hackathon demos. Everything here has
 
 | Tool | Why |
 |------|-----|
-| Python 3.11+ | MRS bridge, demos, ledger |
-| SWI-Prolog 9.x | The Prolog gate — required, not optional |
+| Docker Desktop | Runs Python, SWI-Prolog, and MRS inside a container — no local install needed |
 | Git | Clone the repo |
-| Nova Act API key | Browser automation |
+| Nova Act API key | Browser automation (only for demos with `--live` or full Nova Act) |
 | AWS credentials | Nova Vision (Bedrock) — only needed for `--live` flag |
+
+Python and SWI-Prolog do **not** need to be installed locally. They run inside Docker.
 
 ---
 
@@ -53,16 +54,12 @@ git checkout phase2-nova-demo
 
 ---
 
-## Step 4 — Install Python Dependencies
+## Step 4 — Install Nova Act (host only)
+
+Python, SWI-Prolog, and all other deps run inside Docker. The only thing you need locally is Nova Act, and only for browser automation demos:
 
 ```powershell
-pip install -r forge/requirements.txt
-pip install z3-solver reportlab nova-act boto3
-```
-
-If you get a `z3-solver` build error, try:
-```powershell
-pip install z3-solver --prefer-binary
+pip install nova-act boto3
 ```
 
 ---
@@ -112,22 +109,23 @@ Ask Brandon for the `mirroros-bedrock-dev` credentials if you don't have them. N
 
 ## Step 7 — Verify the Setup
 
-Run the terminal-only demo (no browser, no API keys needed):
-
+Start the services:
 ```powershell
-python examples/ledgerlark_demo/ap_demo.py --no-browser
+docker compose up -d
 ```
 
-You should see 4 expenses processed with PERMITTED/REJECTED verdicts and `z3_verdict: VALID` in the reasoning log.
+Run the terminal-only AP demo inside the container (no API keys needed):
+```powershell
+docker compose exec forge python examples/ledgerlark_demo/ap_demo.py --no-browser
+```
 
-For the raw governance pulse demo (5 pulses, no Zoho, no Nova Act):
+You should see 4 expenses processed with PERMITTED/REJECTED verdicts.
 
+For the raw governance pulse demo (5 pulses, Docker only):
 ```powershell
 # Requires Git Bash or WSL — quickstart.sh is a bash script
 bash quickstart.sh
 ```
-
-This spins up Docker, waits for Forge, then fires 5 MRS pulses — useful for showing the core decision engine without any browser automation.
 
 If you see errors:
 
@@ -166,12 +164,10 @@ python examples/zoho_demo/quote_demo.py --seed 99        # exception path demo
 
 ### LedgerLark Invoice UI (browser, no Zoho account needed)
 ```powershell
-# Terminal 1 — starts the UI server
-python examples/accounting_demo/server.py
+docker compose exec forge python examples/accounting_demo/server.py
 ```
-Then open **http://localhost:7242** in your browser. You'll see the invoice approval page with live MRS verdicts. You can click approve/reject manually, or run Terminal 2 to have Nova Act do it:
+Then open **http://localhost:7242** in your browser. Click approve/reject manually, or run Nova Act automation from the host:
 ```powershell
-# Terminal 2 — Nova Act automation (optional)
 python examples/accounting_demo/nova_demo.py
 ```
 
