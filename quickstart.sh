@@ -63,6 +63,11 @@ RED   = "\033[31m"
 AMBER = "\033[33m"
 RESET = "\033[0m"
 
+# Assert routing facts — in the full AP demo these are set by Gate 1 (routing)
+# before Gate 2 (approval). The quickstart pre-asserts them to mirror that flow.
+bridge.assert_fact("routed_to(inv_001, clerk)")
+bridge.assert_fact("routed_to(inv_002, auditor)")
+
 # 5 governed pulses — same scenario as the explainer doc
 pulses = [
     ("clerk",   "approve_payment",  "approve_bill(inv_001, 200)",
