@@ -5,7 +5,7 @@
 MirrorOS is an open-source governance substrate for agentic AI systems. Before any agent touches a system, MirrorOS runs a dual gate: SWI-Prolog behavioral verification and Z3 formal proof. Decisions are sealed in a tamper-proof audit trail. The framework is public. The compliance expertise is the product.
 
 ```bash
-git clone https://github.com/Strikaris-Tech/mirroros-core && cd mirroros-core && ./quickstart.sh
+git clone https://github.com/Strikaris-Tech/mirroros-core && cd mirroros-core && bash quickstart.sh
 ```
 
 ---
@@ -104,12 +104,15 @@ python examples/accounting_demo/nova_demo.py    # terminal 2
 
 ## Prerequisites
 
+**Quickstart only needs Docker.** Everything runs inside the container.
+
+To run demos directly (outside Docker), you also need:
 ```bash
 pip install -r forge/requirements.txt
 pip install z3-solver reportlab nova-act
 ```
 
-SWI-Prolog must be installed and on PATH:
+SWI-Prolog must be on PATH:
 - macOS: `brew install swi-prolog`
 - Ubuntu: `apt install swi-prolog`
 - Windows: see `docs/KHAN_GUIDE.md`
@@ -119,19 +122,25 @@ SWI-Prolog must be installed and on PATH:
 ## Quickstart
 
 ```bash
-./quickstart.sh          # Docker — brings up Forge + MRS + demo pulses
+bash quickstart.sh
 ```
 
-Or run demos directly without Docker:
+Docker only — no local Python or Prolog install needed. Brings up Forge + immudb, runs 5 governed pulses, prints PERMITTED / REJECTED verdicts with latency.
+
+**To run demos directly (no Docker):**
 
 ```bash
-# Terminal demo — no API keys needed
-python examples/ledgerlark_demo/ap_demo.py --no-browser
-python examples/accounting_demo/run_demo.py
+# LedgerLark Invoice UI — open http://localhost:7242 after starting
+python examples/accounting_demo/server.py       # terminal 1 (no API key needed)
+python examples/accounting_demo/nova_demo.py    # terminal 2 (Nova Act automation, optional)
 
-# With Nova Act (requires NOVA_ACT_API_KEY)
-python examples/ledgerlark_demo/ap_demo.py
-python examples/accounting_demo/nova_demo.py
+# LedgerLark AP Orchestration — Zoho Books
+python examples/ledgerlark_demo/ap_demo.py --no-browser   # terminal only
+python examples/ledgerlark_demo/ap_demo.py                 # with Nova Act
+
+# Zoho Quote-to-Cash
+python examples/zoho_demo/quote_demo.py          # mock Nova Vision
+python examples/zoho_demo/quote_demo.py --live   # real Nova Vision (needs AWS)
 ```
 
 ---
