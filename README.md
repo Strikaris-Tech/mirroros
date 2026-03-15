@@ -61,16 +61,6 @@ python examples/accounting_demo/server.py       # terminal 1
 python examples/accounting_demo/nova_demo.py    # terminal 2
 ```
 
-### 3. Zoho Quote-to-Cash (`examples/zoho_demo/`)
-
-Full quote-to-cash workflow governed by MRS. Nova Act drives Zoho Books. Nova Vision (Amazon Nova Pro via Bedrock) reads a signed PO PDF and extracts line items. MRS evaluates document variance against a 2% tolerance before fulfillment proceeds. Requires AWS Bedrock access for live mode.
-
-```bash
-export NOVA_ACT_API_KEY=<key>
-python examples/zoho_demo/quote_demo.py          # mock Nova Vision
-python examples/zoho_demo/quote_demo.py --live   # real Nova Vision (needs AWS Bedrock)
-```
-
 ---
 
 ## What's in This Repo
@@ -83,11 +73,9 @@ python examples/zoho_demo/quote_demo.py --live   # real Nova Vision (needs AWS B
 | `mrs/bridge/mrs_bridge.py` | Dual-gate bridge: Prolog behavioral + Z3 structural |
 | `mrs/verifier/verify_codex.py` | Z3 formal verification engine + `ProofArtifact` |
 | `ledger/immudb_client.py` | immudb client — cryptographically sealed decision trail |
-| `ledger/vision.py` | Nova Vision (Amazon Nova Pro) — PDF extraction via Bedrock |
-| `ledger/po_generator.py` | PO PDF generator for quote-to-cash demo |
+| `ledger/verify.py` | CLI verification — `python -m ledger.verify <action_id>` |
 | `forge/api.py` | FastAPI: agent routing, MRS endpoints, WebSocket pulse stream |
 | `adapters/` | Mock adapters for banking, CI/CD, accounting |
-| `examples/zoho_demo/` | Quote-to-cash: Nova Act + Nova Vision + MRS |
 | `examples/ledgerlark_demo/` | AP orchestration: LedgerLark dual-gate routing |
 | `examples/accounting_demo/` | Invoice approval: clerk/auditor governance |
 
@@ -135,12 +123,6 @@ python examples/ledgerlark_demo/ap_demo.py
 **Invoice Approval UI** — no API key needed, open `http://localhost:7242`:
 ```bash
 docker compose exec -w /app forge python examples/accounting_demo/server.py
-```
-
-**Zoho Quote-to-Cash** — with Nova Act:
-```bash
-python examples/zoho_demo/quote_demo.py          # mock Nova Vision
-python examples/zoho_demo/quote_demo.py --live   # real Nova Vision (needs AWS Bedrock)
 ```
 
 ---

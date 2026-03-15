@@ -177,7 +177,7 @@ but as the substrate.
 | Executor | Amazon Nova Act | Browser automation |
 | Ledger | immudb | Tamper-proof audit trail |
 | API | FastAPI (Forge) | Agent routing + REST |
-| UI | FlameConsole (Svelte) | Real-time pulse stream |
+| UI | HTML/JS (demo_ui) | Real-time verdict panel |
 
 ---
 
@@ -218,7 +218,7 @@ python examples/ledgerlark_demo/ap_demo.py
 MirrorOS Core is Apache 2.0. The framework is public. The compliance domain
 expertise, client integrations, and learning loop are the product.
 
-Fork it. Build on it. If you run it as a service, open your modifications.
+Fork it. Build on it. Contributions welcome.
 
 > "The ink that writes itself. Every agent action proven before it executes,
 > sealed in a record that cannot be changed."
