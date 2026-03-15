@@ -153,9 +153,11 @@ async def push_verdict(payload: dict):
     permitted  = payload.get("permitted", False)
 
     if invoice_id and invoice_id in INVOICES:
-        # Only pre-set "blocked" immediately — "approved" waits for Nova Act's actual click.
-        if not permitted:
-            INVOICES[invoice_id]["status"] = "blocked"
+        # Update status on every verdict — handles both initial decisions and
+        # auditor overrides of previously-blocked invoices.
+        INVOICES[invoice_id]["status"] = "approved" if permitted else "blocked"
+        if permitted:
+            INVOICES[invoice_id]["approved_by"] = payload.get("agent", "unknown")
 
     payload.setdefault("time", datetime.now().strftime("%H:%M:%S"))
     VERDICTS.append(payload)
