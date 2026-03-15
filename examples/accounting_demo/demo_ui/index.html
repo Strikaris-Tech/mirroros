@@ -256,7 +256,7 @@
           <td class="amount">${fmt(inv.amount)}</td>
           <td>
             <span class="status-badge ${statusClass}" id="status-${id}">
-              <span class="dot"></span>${inv.status}
+              <span class="dot"></span>${inv.status}${inv.approved_by ? ' · ' + inv.approved_by : ''}
             </span>
           </td>
           <td>
