@@ -25,7 +25,7 @@ team that defined the architecture publicly, before the space fills up.
 
 ## License
 
-**AGPL-3.0 across the board** — core, UI, adapters, everything.
+**Apache 2.0** — core, UI, adapters, everything. (Changed from AGPL-3.0 after licensing review.)
 
 ---
 
@@ -60,7 +60,7 @@ team that defined the architecture publicly, before the space fills up.
 
 ## Phase 0 — Decisions ✓ Complete
 
-- [x] License: AGPL-3.0
+- [x] License: Apache 2.0
 - [x] Nova approach: Nova Act SDK (local, not CDK)
 - [x] Team: Brandon + Kevin joint submission
 - [x] Demo agent names: LedgerLark (clerk/auditor tiers)
@@ -87,7 +87,7 @@ team that defined the architecture publicly, before the space fills up.
 ### Kevin
 - [x] Nova Act SDK access confirmed
 - [ ] Review extracted codebase pre-publish
-- [ ] AGPL-3.0 sign-off
+- [ ] Apache 2.0 sign-off
 
 ---
 
@@ -358,7 +358,7 @@ surface is a deterministic Prolog query. The LLM is a cursor.
 | AWS workflow definition (Devpost visuals) | Kevin | Pending |
 | SDF Analyzer → LedgerLark demo | Kevin + Brandon | Exploring |
 | Code review — pre-publish | Kevin | Pending |
-| AGPL-3.0 sign-off | Kevin | Pending |
+| Apache 2.0 sign-off | Kevin | Pending |
 | Demo video production | Both | Planned |
 | Devpost submission | Brandon | Planned |
 | Remove PLAN.md before public launch | Brandon | Pre-launch |

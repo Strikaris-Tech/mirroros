@@ -29,31 +29,13 @@ Both gates must pass. Either gate can block. The verdict is deterministic — no
 Prolog (Law) → Z3 (Verification) → Python (Bridge) → Agents (Action)
 ```
 
+For the full architecture breakdown, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
 ---
 
 ## Demos
 
-### 1. Zoho Quote-to-Cash (`examples/zoho_demo/`)
-
-A governed Strikaris → Khan Mall sales workflow. Nova Act drives Zoho Books. Nova Vision (Amazon Nova Pro) reads the signed PO PDF and extracts line items. MRS evaluates the document variance against a strict 2% tolerance before any fulfillment or invoicing action proceeds.
-
-| Stage | Action | Gate result |
-|-------|--------|-------------|
-| 1 | Create quote | Prolog + Z3 |
-| 2 | Receive Khan Mall PO | PDF → Nova Vision extraction |
-| 3 | Approve document | MRS compares PO vs quote |
-| 4 | Start fulfillment | Prolog + Z3 |
-| 5 | Generate invoice | Prolog + Z3 |
-
-```bash
-export NOVA_ACT_API_KEY=<key>
-export AWS_ACCESS_KEY_ID=<key>
-export AWS_SECRET_ACCESS_KEY=<key>
-python examples/zoho_demo/quote_demo.py --live   # real Nova Vision
-python examples/zoho_demo/quote_demo.py          # mock Nova Vision, real Nova Act
-```
-
-### 2. LedgerLark AP Orchestration (`examples/ledgerlark_demo/`)
+### 1. LedgerLark AP Orchestration (`examples/ledgerlark_demo/`)
 
 LedgerLark (overseer agent) governs an accounts payable queue. Every expense passes two MRS gates: a routing gate (which agent handles it?) and an approval gate (is the agent authorized?). Nova Act records approved expenses in Zoho Books. Rejected vendors never reach the browser.
 
@@ -70,13 +52,23 @@ python examples/ledgerlark_demo/ap_demo.py
 python examples/ledgerlark_demo/ap_demo.py --no-browser  # terminal only
 ```
 
-### 3. Governed Invoice Approval (`examples/accounting_demo/`)
+### 2. Governed Invoice Approval (`examples/accounting_demo/`)
 
-The original demo. Six pulses, clerk and auditor, live browser via Nova Act.
+Invoice approval with a live UI. Clerk and auditor agents, MRS-gated approvals, real-time verdict panel in the browser.
 
 ```bash
 python examples/accounting_demo/server.py       # terminal 1
 python examples/accounting_demo/nova_demo.py    # terminal 2
+```
+
+### 3. Zoho Quote-to-Cash (`examples/zoho_demo/`)
+
+Full quote-to-cash workflow governed by MRS. Nova Act drives Zoho Books. Nova Vision (Amazon Nova Pro via Bedrock) reads a signed PO PDF and extracts line items. MRS evaluates document variance against a 2% tolerance before fulfillment proceeds. Requires AWS Bedrock access for live mode.
+
+```bash
+export NOVA_ACT_API_KEY=<key>
+python examples/zoho_demo/quote_demo.py          # mock Nova Vision
+python examples/zoho_demo/quote_demo.py --live   # real Nova Vision (needs AWS Bedrock)
 ```
 
 ---
@@ -89,7 +81,6 @@ python examples/accounting_demo/nova_demo.py    # terminal 2
 | `mrs/prolog/concordance.pl` | Z3↔Prolog drift prevention — loaded at boot, boot fails on drift |
 | `mrs/prolog/Agent_Rules.pl` | Agent identities: LedgerLark, clerk, auditor, courier |
 | `mrs/bridge/mrs_bridge.py` | Dual-gate bridge: Prolog behavioral + Z3 structural |
-| `mrs/verifier/essence_runes.py` | Z3 Layer 1 physics substrate — 8 essence runes, L2 relational verbs |
 | `mrs/verifier/verify_codex.py` | Z3 formal verification engine + `ProofArtifact` |
 | `ledger/immudb_client.py` | immudb client — cryptographically sealed decision trail |
 | `ledger/vision.py` | Nova Vision (Amazon Nova Pro) — PDF extraction via Bedrock |
@@ -131,11 +122,6 @@ Brings up Forge + immudb, runs 5 governed pulses, prints PERMITTED / REJECTED ve
 docker compose up -d
 ```
 
-**LedgerLark Invoice UI** — no API key needed, open `http://localhost:7242`:
-```bash
-docker compose exec -w /app forge python examples/accounting_demo/server.py
-```
-
 **LedgerLark AP Orchestration** — terminal only, no API key needed:
 ```bash
 docker compose exec -w /app forge python examples/ledgerlark_demo/ap_demo.py --no-browser
@@ -146,10 +132,15 @@ docker compose exec -w /app forge python examples/ledgerlark_demo/ap_demo.py --n
 python examples/ledgerlark_demo/ap_demo.py
 ```
 
+**Invoice Approval UI** — no API key needed, open `http://localhost:7242`:
+```bash
+docker compose exec -w /app forge python examples/accounting_demo/server.py
+```
+
 **Zoho Quote-to-Cash** — with Nova Act:
 ```bash
 python examples/zoho_demo/quote_demo.py          # mock Nova Vision
-python examples/zoho_demo/quote_demo.py --live   # real Nova Vision (needs AWS)
+python examples/zoho_demo/quote_demo.py --live   # real Nova Vision (needs AWS Bedrock)
 ```
 
 ---
@@ -180,9 +171,7 @@ python -m ledger.verify <action_id>
 
 ## License
 
-AGPL-3.0. Anyone running any part of MirrorOS as a service must open-source their modifications.
-
-See [LICENSE](LICENSE).
+Apache 2.0. Free to use, modify, and distribute. See [LICENSE](LICENSE).
 
 ---
 

@@ -60,4 +60,4 @@ Z3 verdicts showing `SKIP` (expected — `essence_runes.py` not present).
 | Code review `ledger/vision.py` | ✅ Done |
 | Code review `mrs/bridge/mrs_bridge.py` | ✅ Done |
 | Test `--live` flag (Bedrock) | ⏳ Blocked — awaiting AWS account unblock |
-| AGPL sign-off | ⏳ Pending |
+| Apache 2.0 sign-off | ⏳ Pending |

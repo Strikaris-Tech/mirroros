@@ -159,7 +159,7 @@ Expected — `essence_runes.py` is intentionally excluded from the public repo. 
 - [ ] **Nova Act scope** — validate the AP demo runs cleanly on your machine and the Zoho session persists
 - [ ] **AWS workflow** — test the `--live` flag once Bedrock is unblocked; confirm Nova Pro extraction returns correct PO totals
 - [ ] **Code review** — review `ledger/vision.py` and `mrs/bridge/mrs_bridge.py` for any issues before submission
-- [ ] **AGPL sign-off** — confirm you've reviewed the license and are good with it for submission
+- [ ] **Apache 2.0 sign-off** — confirm you've reviewed the license and are good with it for submission
 
 ---
 

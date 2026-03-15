@@ -1,7 +1,6 @@
-# MirrorOS — Explainer for Judges
+# MirrorOS — Architecture
 
-**One sentence:** MirrorOS makes every AI agent action provable before it
-executes and permanently sealed after — using formal logic, not prompts.
+> Every AI agent action — provable before it executes, permanently sealed after. Formal logic, not prompts.
 
 ---
 
@@ -216,7 +215,7 @@ python examples/ledgerlark_demo/ap_demo.py
 
 ## Open Source
 
-MirrorOS Core is AGPL-3.0. The framework is public. The compliance domain
+MirrorOS Core is Apache 2.0. The framework is public. The compliance domain
 expertise, client integrations, and learning loop are the product.
 
 Fork it. Build on it. If you run it as a service, open your modifications.
