@@ -31,6 +31,7 @@ import json
 import logging
 import os
 import sys
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -80,13 +81,7 @@ def verify_entry(
     try:
         from immudb import ImmudbClient  # type: ignore[import]
     except ImportError:
-        return {
-            "verified": False,
-            "error":    "immudb-py not installed (pip install immudb-py)",
-            "key":      key_str,
-            "tx":       None,
-            "decision": None,
-        }
+        return _verify_from_json_log(action_id, key_str)
 
     try:
         client = ImmudbClient(f"{host}:{port}")
@@ -116,10 +111,59 @@ def verify_entry(
         }
 
     except Exception as exc:
-        logger.error(f"verify_entry failed for {key_str}: {exc}")
+        logger.warning(f"immudb unavailable for {key_str}: {exc} — falling back to JSON log")
+        return _verify_from_json_log(action_id, key_str)
+
+
+def _verify_from_json_log(action_id: str, key_str: str) -> dict[str, Any]:
+    """
+    Fallback verification against the local reasoning log.
+
+    Used when immudb is not installed or not reachable.  Searches
+    mrs/memory/reasoning_log.json for a matching action_id.
+
+    Returns verified=True if the entry is found (integrity is local-only,
+    not cryptographic), with source="json_log" to distinguish from immudb.
+    """
+    repo_root = Path(__file__).resolve().parents[1]
+    log_path  = repo_root / "mrs" / "memory" / "reasoning_log.json"
+
+    if not log_path.exists():
         return {
             "verified": False,
-            "error":    str(exc),
+            "error":    "immudb offline and no local reasoning log found",
+            "key":      key_str,
+            "tx":       None,
+            "decision": None,
+        }
+
+    try:
+        entries = json.loads(log_path.read_text())
+        if not isinstance(entries, list):
+            entries = [entries]
+
+        for entry in entries:
+            if entry.get("action_id") == action_id or entry.get("details", {}).get("action_id") == action_id:
+                return {
+                    "verified": True,
+                    "source":   "json_log",
+                    "key":      key_str,
+                    "tx":       None,
+                    "decision": entry,
+                }
+
+        return {
+            "verified": False,
+            "error":    f"action_id '{action_id}' not found in reasoning log",
+            "key":      key_str,
+            "tx":       None,
+            "decision": None,
+        }
+
+    except Exception as exc:
+        return {
+            "verified": False,
+            "error":    f"failed to read reasoning log: {exc}",
             "key":      key_str,
             "tx":       None,
             "decision": None,
