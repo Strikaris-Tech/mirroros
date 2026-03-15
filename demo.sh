@@ -1,20 +1,21 @@
 #!/usr/bin/env bash
 # demo.sh — MirrorOS full demo sequence for video recording
 #
-# Shots are timed to match the narration script (~3 min total):
-#   Shot 1  0:18 – 1:20   AP terminal only       (~62s buffer after)
-#   Shot 2  1:20 – 2:20   AP + Nova Act          (~60s buffer after)
-#   Shot 3  2:20 – 2:38   Ledger verify          (~18s buffer after)
-#   Shot 4  2:38 – 3:00   Cold start / quickstart
+# Shot 1   AP terminal only          (no browser, no API key)
+# Shot 2   AP + Nova Act + Zoho      (browser automation)
+# Shot 3   LedgerLark Invoice UI     (localhost:7242 + nova_demo.py)
+# Shot 4   Ledger verify             (verify rejected bill seal)
+# Shot 5   Cold start / quickstart
 #
 # Tune the PAUSE_* values (seconds) if your narration runs faster/slower.
 #
 # Usage: bash demo.sh
 set -euo pipefail
 
-PAUSE_AFTER_SHOT1=8   # breathing room before Shot 2 narration kicks in
-PAUSE_AFTER_SHOT2=6   # breathing room before Shot 3 narration kicks in
-PAUSE_AFTER_SHOT3=4   # breathing room before Shot 4 narration kicks in
+PAUSE_AFTER_SHOT1=8
+PAUSE_AFTER_SHOT2=6
+PAUSE_AFTER_SHOT3=4
+PAUSE_AFTER_SHOT4=4
 
 BOLD="\033[1m"
 GREEN="\033[32m"
@@ -71,21 +72,45 @@ fi
 
 _countdown $PAUSE_AFTER_SHOT2 "Shot 3 in"
 
-# ── Shot 3 — Ledger verify ────────────────────────────────────────────────────
+# ── Shot 3 — LedgerLark Invoice UI ───────────────────────────────────────────
 
-_header "SHOT 3 — Ledger verification"
+_header "SHOT 3 — LedgerLark Invoice UI (localhost:7242)"
+
+if [[ -z "${NOVA_ACT_API_KEY:-}" ]]; then
+  echo -e "${AMBER}NOVA_ACT_API_KEY not set — open http://localhost:7242 and approve manually.${RESET}\n"
+  docker compose exec -w /app forge python examples/accounting_demo/server.py &
+  SERVER_PID=$!
+  echo -e "${DIM}Server started. Open http://localhost:7242 in your browser.${RESET}"
+  echo -e "${DIM}Press Enter when done recording the UI...${RESET}"
+  read -r
+  kill $SERVER_PID 2>/dev/null || true
+else
+  echo -e "${DIM}Starting UI server and running nova_demo.py against it.${RESET}"
+  echo -e "${DIM}Open http://localhost:7242 now — Nova Act will drive it.${RESET}\n"
+  docker compose exec -w /app forge python examples/accounting_demo/server.py &
+  SERVER_PID=$!
+  sleep 2  # let server come up
+  python examples/accounting_demo/nova_demo.py
+  kill $SERVER_PID 2>/dev/null || true
+fi
+
+_countdown $PAUSE_AFTER_SHOT3 "Shot 4 in"
+
+# ── Shot 4 — Ledger verify ────────────────────────────────────────────────────
+
+_header "SHOT 4 — Ledger verification"
 echo -e "${DIM}Verifying rejected bill seal: ${VERIFY_ID}${RESET}\n"
 
 python -m ledger.verify "${VERIFY_ID}"
 
-_countdown $PAUSE_AFTER_SHOT3 "Shot 4 in"
+_countdown $PAUSE_AFTER_SHOT4 "Shot 5 in"
 
-# ── Shot 4 — Cold start ───────────────────────────────────────────────────────
+# ── Shot 5 — Cold start ───────────────────────────────────────────────────────
 
-_header "SHOT 4 — Cold start"
+_header "SHOT 5 — Cold start"
 echo -e "${DIM}Tearing down and running quickstart from scratch.${RESET}\n"
 
 docker compose down -v
 bash quickstart.sh
 
-echo -e "\n${BOLD}${GREEN}All 4 shots complete.${RESET}"
+echo -e "\n${BOLD}${GREEN}All 5 shots complete.${RESET}"
