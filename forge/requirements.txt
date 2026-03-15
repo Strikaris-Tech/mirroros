@@ -15,11 +15,5 @@ nova-act
 # Ledger (optional — MRS runs without immudb)
 immudb-py
 
-# Nova Vision (optional — requires AWS credentials)
-boto3
-
 # Z3 verification (optional — gate skips gracefully if absent)
 z3-solver
-
-# Demo / PO generation
-reportlab
