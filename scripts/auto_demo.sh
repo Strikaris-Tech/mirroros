@@ -1,15 +1,40 @@
 #!/usr/bin/env bash
-# demo.sh — MirrorOS full demo sequence for video recording
+# demo.sh — MirrorOS full demo sequence, timed for video recording
 #
-# Step 1   AP terminal only          (no browser, no API key)
-# Step 2   AP + Nova Act + Zoho      (browser automation)
-# Step 3   LedgerLark Invoice UI     (localhost:7242 + nova_demo.py)
-# Step 4   Ledger verify             (verify rejected bill seal)
-# Step 5   Cold start / quickstart
+# Runs all 5 demo steps automatically with countdown pauses between steps
+# so narration audio can be laid in during post-production. Tune the
+# PAUSE_* values below to match your narration timing.
 #
-# Tune the PAUSE_* values (seconds) to sync with narration pacing.
+# Steps:
+#   1  AP Orchestration (terminal)     — LedgerLark routes 4 bills through
+#                                        the dual-gate MRS engine. Shows
+#                                        PERMITTED / REJECTED verdicts with
+#                                        latency and immudb seal per bill.
+#                                        Opens arch diagram in browser after.
+#   2  AP + Nova Act + Zoho Books      — Same routing, but approved bills
+#                                        are recorded in Zoho Books by Nova
+#                                        Act. Rejected bills never touch the
+#                                        browser. Requires NOVA_ACT_API_KEY.
+#   3  LedgerLark Invoice UI           — MRS-gated invoice approval with a
+#                                        live verdict panel at localhost:7242.
+#                                        Nova Act clicks through approvals if
+#                                        key is set; otherwise approve manually.
+#   4  Ledger verification             — Runs python -m ledger.verify against
+#                                        the sealed routing decision for the
+#                                        rejected bill (BILL-003). Prints the
+#                                        Merkle proof and verified: true.
+#   5  Cold start                      — Tears down all services and runs
+#                                        quickstart.sh from scratch to prove
+#                                        the system boots clean in < 60s.
 #
-# Usage: bash demo.sh
+# Prerequisites:
+#   docker                  (required — all services run in containers)
+#   NOVA_ACT_API_KEY        (optional — Steps 2 and 3 skip if not set)
+#   /Applications/Chromium.app  (optional — falls back to system browser)
+#
+# Usage:
+#   bash scripts/demo.sh
+#   PAUSE_AFTER_STEP1=80 bash scripts/demo.sh   # override a pause
 set -euo pipefail
 
 PAUSE_AFTER_STEP1=65
@@ -106,7 +131,11 @@ VERIFY_ID="ap_${ACTION_DATE}_003_route"
 
 _pause 58
 ARCH_HTML="$(pwd)/examples/ledgerlark_demo/arch_diagram.html"
-open -a /Applications/Chromium.app "$ARCH_HTML" 2>/dev/null || true
+# Open arch diagram — try Chromium first, fall back to system default browser
+open -a /Applications/Chromium.app "$ARCH_HTML" 2>/dev/null \
+  || open "$ARCH_HTML" 2>/dev/null \
+  || xdg-open "$ARCH_HTML" 2>/dev/null \
+  || true
 _pause $((PAUSE_AFTER_STEP1 - 58))
 
 # ── Step 2 — AP with Nova Act + Zoho ─────────────────────────────────────────

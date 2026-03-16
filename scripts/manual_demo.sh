@@ -1,9 +1,39 @@
 #!/usr/bin/env bash
-# manual_demo.sh — MirrorOS demo, Enter-key paced for live narration
+# manual_demo.sh — MirrorOS full demo sequence, Enter-key paced
 #
-# Press Enter at each prompt to advance to the next step.
+# Same 5-step sequence as demo.sh but advances on Enter instead of
+# timed countdowns. Use this for live presentations, walkthroughs,
+# or when you want full control over pacing.
 #
-# Usage: bash manual_demo.sh
+# Steps:
+#   1  AP Orchestration (terminal)     — LedgerLark routes 4 bills through
+#                                        the dual-gate MRS engine. Shows
+#                                        PERMITTED / REJECTED verdicts with
+#                                        latency and immudb seal per bill.
+#                                        Opens arch diagram in browser on Enter.
+#   2  AP + Nova Act + Zoho Books      — Same routing, but approved bills
+#                                        are recorded in Zoho Books by Nova
+#                                        Act. Rejected bills never touch the
+#                                        browser. Requires NOVA_ACT_API_KEY.
+#   3  LedgerLark Invoice UI           — MRS-gated invoice approval with a
+#                                        live verdict panel at localhost:7242.
+#                                        Nova Act clicks through approvals if
+#                                        key is set; otherwise approve manually.
+#   4  Ledger verification             — Runs python -m ledger.verify against
+#                                        the sealed routing decision for the
+#                                        rejected bill (BILL-003). Prints the
+#                                        Merkle proof and verified: true.
+#   5  Cold start                      — Tears down all services and runs
+#                                        quickstart.sh from scratch to prove
+#                                        the system boots clean in < 60s.
+#
+# Prerequisites:
+#   docker                  (required — all services run in containers)
+#   NOVA_ACT_API_KEY        (optional — Steps 2 and 3 skip if not set)
+#   /Applications/Chromium.app  (optional — falls back to system browser)
+#
+# Usage:
+#   bash scripts/manual_demo.sh
 set -euo pipefail
 
 BOLD="\033[1m"
@@ -85,7 +115,11 @@ VERIFY_ID="ap_${ACTION_DATE}_003_route"
 
 _next "open arch diagram when ready"
 ARCH_HTML="$(pwd)/examples/ledgerlark_demo/arch_diagram.html"
-open -a /Applications/Chromium.app "$ARCH_HTML" 2>/dev/null || true
+# Open arch diagram — try Chromium first, fall back to system default browser
+open -a /Applications/Chromium.app "$ARCH_HTML" 2>/dev/null \
+  || open "$ARCH_HTML" 2>/dev/null \
+  || xdg-open "$ARCH_HTML" 2>/dev/null \
+  || true
 
 _next "move to Nova Act step"
 
