@@ -119,6 +119,7 @@ def _verdict(permitted: bool, agent: str, action: str, reason: str, latency_ms: 
     if reason and reason != "permitted":
         print(f"  {DIM}→ {reason}{RESET}")
     print(f"  {DIM}{latency_ms:.1f}ms{RESET}")
+    time.sleep(1.5)
 
 def _seal_line(result: dict):
     if result.get("verified"):
@@ -127,13 +128,20 @@ def _seal_line(result: dict):
     elif result.get("error"):
         print(f"  {DIM}Ledger   {RESET}{DIM}offline ({result['error']}){RESET}")
 
-def _nova_line(nova, instruction: str):
+def _nova_line(nova, instruction: str) -> bool:
+    """Returns True if executed, False if skipped due to browser error."""
     if nova is not None:
         print(f"\n  {CYAN}Nova Act{RESET}  {DIM}\"{instruction}\"{RESET}")
-        nova.act(instruction)
-        print(f"  {GREEN}✓ executed{RESET}")
+        try:
+            nova.act(instruction)
+            print(f"  {GREEN}✓ executed{RESET}")
+            return True
+        except Exception as exc:
+            print(f"  {AMBER}⚠ Nova Act error — {exc.__class__.__name__}: {exc}{RESET}")
+            return False
     else:
         print(f"\n  {CYAN}Nova Act{RESET}  {DIM}[no-browser] \"{instruction}\"{RESET}")
+        return True
 
 
 # ── MRS gate helper ───────────────────────────────────────────────────────────
@@ -197,7 +205,7 @@ def _launch_chromium():
 
 # ── Demo ─────────────────────────────────────────────────────────────────────
 
-def run(nova, bridge, ledger):
+def run(nova, bridge, ledger, max_bills: int = 0):
     run_date = datetime.now().strftime("%Y%m%d")
 
     print(f"\n{BOLD}MirrorOS — LedgerLark AP Orchestration Demo{RESET}")
@@ -211,8 +219,11 @@ def run(nova, bridge, ledger):
     print(f"  {DIM}Nova Act     {RESET}{nova_status}")
     print(f"  {DIM}Orchestrator {RESET}{AMBER}ledgerlark{RESET}")
     _hr()
+    time.sleep(2)
 
-    for i, bill in enumerate(BILLS, 1):
+    bills = BILLS[:max_bills] if max_bills > 0 else BILLS
+
+    for i, bill in enumerate(bills, 1):
         bill_id     = bill["bill_id"]
         vendor      = bill["vendor"]
         vendor_name = bill["vendor_name"]
@@ -284,11 +295,12 @@ def run(nova, bridge, ledger):
                           "routed_agent": routed_agent}))
 
         if permitted_approve and nova is not None:
+            _nova_line(nova, f'Navigate to {ZOHO_EXPENSES}')
             _nova_line(nova,
-                f'In Zoho Books Expenses, click "New Expense" or "Record Expense". '
+                f'Click "New Expense" or "Record Expense". '
                 f'Set the amount to {amount}. '
                 f'In the Notes or Description field enter: '
-                f'"[{bill_id}] {vendor_name} — APPROVED by {routed_agent} via MirrorOS MRS".'
+                f'{bill_id} {vendor_name} - APPROVED by {routed_agent} via MirrorOS MRS.'
             )
             _nova_line(nova,
                 f'For the "Paid Through" field type "Petty Cash" and press Enter. '
@@ -298,14 +310,11 @@ def run(nova, bridge, ledger):
             )
 
         _hr()
-        time.sleep(0.8)
+        time.sleep(3)
 
     # ── Summary ───────────────────────────────────────────────────────────────
-    approved = sum(1 for b in BILLS if bridge.query(
-        f"routed_to('{b['bill_id']}', _)"
-    ) or True)  # ledger tells the real story
     print(f"\n{BOLD}Done.{RESET}")
-    print(f"  {len(BILLS)} bills processed by LedgerLark")
+    print(f"  {len(bills)} bills processed by LedgerLark")
     print(f"  Reasoning log:  mrs/memory/reasoning_log.json")
     if ledger.is_available():
         print(f"  Verify a seal:  {CYAN}python -m ledger.verify ap_{run_date}_001_route{RESET}")
@@ -320,6 +329,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--no-browser", action="store_true",
                         help="Skip Nova Act browser automation (terminal only)")
+    parser.add_argument("--max-bills", type=int, default=0,
+                        help="Limit number of bills to process (0 = all)")
     args = parser.parse_args()
 
     nova_key_set = bool(os.getenv("NOVA_ACT_API_KEY"))
@@ -374,6 +385,6 @@ if __name__ == "__main__":
             nova_kwargs = dict(starting_page=ZOHO_EXPENSES)
 
         with NovaAct(**nova_kwargs) as nova:
-            run(nova, bridge, ledger)
+            run(nova, bridge, ledger, max_bills=args.max_bills)
     else:
-        run(None, bridge, ledger)
+        run(None, bridge, ledger, max_bills=args.max_bills)

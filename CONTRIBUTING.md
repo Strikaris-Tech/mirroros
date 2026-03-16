@@ -19,7 +19,7 @@ Issues labelled `good-first-pulse` are a good entry point.
 
 ```bash
 git clone https://github.com/Strikaris-Tech/mirroros-core
-cd mirroros
+cd mirroros-core
 pip install -r forge/requirements.txt
 ```
 
