@@ -15,6 +15,22 @@ Issues labelled `good-first-pulse` are a good entry point.
 
 ---
 
+## Branching Model
+
+MirrorOS follows git-flow. The short version:
+
+| Branch | Purpose |
+|--------|---------|
+| `main` | Tagged releases only. Never commit directly. |
+| `develop` | Default branch. All PRs target here. |
+| `feature/*` | New features — branch from `develop`, PR back to `develop`. |
+| `release/*` | Release prep — branch from `develop`, merge to `main` + `develop`. |
+| `hotfix/*` | Urgent fixes — branch from `main`, merge to `main` + `develop`. |
+
+All pull requests should target `develop`. Direct pushes to `main` are not accepted.
+
+---
+
 ## Development Setup
 
 ```bash
