@@ -103,7 +103,7 @@ authorized_memory_access(Agent, self) :-
     agent(Agent, _).
 
 % Access through granted consent (aligned with L2 concordance model)
-% consent(Owner, Agent, Resource)  Owner grants Agent access to Resource
+% consent(Owner, Agent, Resource) -> Owner grants Agent access to Resource
 authorized_memory_access(Agent, Target) :-
     has_resource_consent(Agent, Target).
 
@@ -132,7 +132,7 @@ can_act(Agent, Action) :-
 
 % Grant consent: Granter gives Grantee access to Resource.
 % Precondition: Granter must own the Resource.
-% consent(Granter, Grantee, Resource)  aligned with L2 concordance.
+% consent(Granter, Grantee, Resource) -> aligned with L2 concordance.
 % Test query: ?- grant_consent(mirror_host, ledgerlark, audit_vault).
 grant_consent(Granter, Grantee, Resource) :-
     agent(Granter, _),

@@ -1,0 +1,19 @@
+# Forge — MirrorOS API hub dependencies
+fastapi
+uvicorn[standard]
+pydantic
+httpx
+pyyaml
+
+# MRS bridge
+pyswip
+
+# LLM backends
+anthropic
+nova-act
+
+# Ledger (optional — MRS runs without immudb)
+immudb-py
+
+# Z3 verification (optional — gate skips gracefully if absent)
+z3-solver

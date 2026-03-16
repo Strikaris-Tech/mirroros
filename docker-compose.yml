@@ -1,0 +1,40 @@
+name: mirroros-core
+
+services:
+
+  forge:
+    build:
+      context: .
+      dockerfile: forge/Dockerfile
+    ports:
+      - "${FORGE_PORT:-8767}:8765"
+      - "7242:7242"
+    volumes:
+      - ./mrs:/app/mrs
+      - ./ledger:/app/ledger
+      - ./agents:/app/agents
+      - ./mrs/memory:/app/mrs/memory
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - NOVA_ACT_API_KEY=${NOVA_ACT_API_KEY:-}
+      - IMMUDB_HOST=immudb
+      - IMMUDB_PORT=3322
+      - IMMUDB_USER=${IMMUDB_USER:-immudb}
+      - IMMUDB_PASS=${IMMUDB_PASS:-immudb}
+      - PYTHONPATH=/app:/app/mrs:/app/forge:/app/ledger
+    depends_on:
+      - immudb
+    restart: unless-stopped
+
+  immudb:
+    image: codenotary/immudb:latest
+    platform: linux/amd64
+    ports:
+      - "${IMMUDB_HOST_PORT:-3324}:3322"
+      - "${IMMUDB_UI_PORT:-8082}:8080"
+    volumes:
+      - immudb_data:/var/lib/immudb
+    restart: unless-stopped
+
+volumes:
+  immudb_data:

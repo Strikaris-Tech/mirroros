@@ -1,6 +1,6 @@
 # Contributing to MirrorOS
 
-Thank you for contributing. MirrorOS is AGPL-3.0 — by submitting a pull request you agree your changes will be released under the same license.
+Thank you for contributing. MirrorOS is Apache 2.0 — by submitting a pull request you agree your changes will be released under the same license.
 
 ---
 
@@ -18,8 +18,8 @@ Issues labelled `good-first-pulse` are a good entry point.
 ## Development Setup
 
 ```bash
-git clone https://github.com/your-org/mirroros
-cd mirroros
+git clone https://github.com/Strikaris-Tech/mirroros-core
+cd mirroros-core
 pip install -r forge/requirements.txt
 ```
 

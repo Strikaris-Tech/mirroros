@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LedgerLark — Invoice Approval</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #1e2433;
+    }
+
+    .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    .logo span { color: #f59e0b; }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      background: #1e2433;
+      color: #64748b;
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+    }
+
+    h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #94a3b8;
+      margin-bottom: 1rem;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+    }
+
+    .table-scroll {
+      max-height: 420px;
+      overflow-y: auto;
+      border: 1px solid #1e2433;
+      border-radius: 8px;
+    }
+
+    .table-scroll::-webkit-scrollbar { width: 6px; }
+    .table-scroll::-webkit-scrollbar-track { background: #0b0e16; }
+    .table-scroll::-webkit-scrollbar-thumb { background: #1e2433; border-radius: 3px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #0f1117;
+      text-align: left;
+      padding: 0.6rem 1rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #475569;
+      border-bottom: 1px solid #1e2433;
+      z-index: 1;
+    }
+
+    tbody tr {
+      border-bottom: 1px solid #1a1f2e;
+      transition: background 0.15s;
+    }
+
+    tbody tr:hover { background: #131720; }
+
+    td {
+      padding: 0.85rem 1rem;
+      vertical-align: middle;
+    }
+
+    .invoice-id {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.8rem;
+      color: #94a3b8;
+    }
+
+    .vendor { color: #e2e8f0; font-weight: 500; }
+
+    .amount {
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    .status-pending  { background: #1e2433; color: #64748b; }
+    .status-approved { background: #052e16; color: #4ade80; }
+    .status-blocked  { background: #2d0a0a; color: #f87171; }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .btn-approve {
+      padding: 0.4rem 0.9rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border-radius: 6px;
+      border: 1px solid #1d4ed8;
+      background: #1e3a8a;
+      color: #bfdbfe;
+      cursor: pointer;
+      transition: background 0.15s, opacity 0.15s;
+      letter-spacing: 0.02em;
+    }
+
+    .btn-approve:hover:not(:disabled) { background: #1d4ed8; color: #eff6ff; }
+
+    .btn-approve:disabled {
+      opacity: 0.3;
+      cursor: default;
+      border-color: #1e2433;
+      background: #1e2433;
+      color: #475569;
+    }
+
+    /* MRS verdict panel */
+    #verdict-panel {
+      margin-top: 2rem;
+      background: #0b0e16;
+      border: 1px solid #1e2433;
+      border-radius: 8px;
+      padding: 1.25rem 1.5rem;
+      min-height: 120px;
+    }
+
+    #verdict-panel h2 { margin-bottom: 0.75rem; }
+
+    .verdict-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid #111520;
+      font-size: 0.82rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+    }
+
+    .verdict-entry:last-child { border-bottom: none; }
+
+    .v-time { color: #334155; min-width: 80px; }
+    .v-permitted { color: #4ade80; min-width: 90px; font-weight: 700; }
+    .v-rejected  { color: #f87171; min-width: 90px; font-weight: 700; }
+    .v-agent { color: #f59e0b; min-width: 80px; }
+    .v-action { color: #94a3b8; }
+    .v-reason { color: #475569; margin-left: 0.5rem; }
+
+    .v-latency { color: #334155; margin-left: auto; white-space: nowrap; }
+
+    #empty-state {
+      color: #1e2433;
+      font-size: 0.82rem;
+      font-family: "SF Mono", "Fira Code", monospace;
+      padding: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo"><span>Ledger</span>Lark</div>
+  <div class="badge">Invoice Approval</div>
+  <div class="badge" style="margin-left:auto; color: #f59e0b;">MRS Governed</div>
+</header>
+
+<h2>Pending Invoices</h2>
+
+<div class="table-scroll">
+<table id="invoice-table">
+  <thead>
+    <tr>
+      <th>Invoice</th>
+      <th>Vendor</th>
+      <th>Amount</th>
+      <th>Status</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="invoice-body">
+    <!-- Populated by /api/invoices -->
+  </tbody>
+</table>
+</div>
+
+<div id="verdict-panel">
+  <h2>MRS Decision Log</h2>
+  <div id="verdict-list">
+    <div id="empty-state">// waiting for governed pulses...</div>
+  </div>
+</div>
+
+<script>
+  const fmt = n => new Intl.NumberFormat('en-US', {
+    style: 'currency', currency: 'USD', maximumFractionDigits: 0
+  }).format(n);
+
+  async function loadInvoices() {
+    const res = await fetch('/api/invoices');
+    const invoices = await res.json();
+    renderInvoices(invoices);
+  }
+
+  function renderInvoices(invoices) {
+    const tbody = document.getElementById('invoice-body');
+    tbody.innerHTML = '';
+    for (const [id, inv] of Object.entries(invoices)) {
+      const statusClass = `status-${inv.status}`;
+      const disabled = inv.status !== 'pending' ? 'disabled' : '';
+      tbody.innerHTML += `
+        <tr id="row-${id}">
+          <td class="invoice-id">${id}</td>
+          <td class="vendor">${inv.vendor_name || inv.vendor}</td>
+          <td class="amount">${fmt(inv.amount)}</td>
+          <td>
+            <span class="status-badge ${statusClass}" id="status-${id}">
+              <span class="dot"></span>${inv.status}${inv.approved_by ? ' · ' + inv.approved_by : ''}
+            </span>
+          </td>
+          <td>
+            <button class="btn-approve" id="btn-${id}" ${disabled}
+              onclick="requestApprove('${id}')">
+              Approve
+            </button>
+          </td>
+        </tr>`;
+    }
+  }
+
+  // Called by Nova Act via button click — or manually.
+  // Marks the invoice approved without re-running the gate; the MRS verdict
+  // was already decided and logged by nova_demo.py before this click.
+  async function requestApprove(invoiceId) {
+    const btn = document.getElementById(`btn-${invoiceId}`);
+    if (btn) btn.disabled = true;
+    const res = await fetch(`/api/mark_approved/${invoiceId}`, { method: 'POST' });
+    const result = await res.json();
+    updateRow(invoiceId, result);
+    // Verdict log is populated via /api/verdicts polling — no addVerdict() needed here.
+  }
+
+  function updateRow(invoiceId, result) {
+    const statusEl = document.getElementById(`status-${invoiceId}`);
+    const btn = document.getElementById(`btn-${invoiceId}`);
+    if (!statusEl) return;
+
+    if (result.permitted) {
+      statusEl.className = 'status-badge status-approved';
+      statusEl.innerHTML = '<span class="dot"></span>approved';
+    } else {
+      statusEl.className = 'status-badge status-blocked';
+      statusEl.innerHTML = '<span class="dot"></span>blocked';
+    }
+    if (btn) btn.disabled = true;
+  }
+
+  function addVerdict(result) {
+    const list = document.getElementById('verdict-list');
+    const empty = document.getElementById('empty-state');
+    if (empty) empty.remove();
+
+    const now = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const verdictClass = result.permitted ? 'v-permitted' : 'v-rejected';
+    const verdictText  = result.permitted ? 'PERMITTED' : 'REJECTED';
+
+    const entry = document.createElement('div');
+    entry.className = 'verdict-entry';
+    entry.innerHTML = `
+      <span class="v-time">${now}</span>
+      <span class="${verdictClass}">${verdictText}</span>
+      <span class="v-agent">${result.agent || '—'}</span>
+      <span class="v-action">${result.action || 'approve_invoice'}('${result.invoice_id}', ${result.amount})</span>
+      ${result.reason && result.reason !== 'permitted'
+        ? `<span class="v-reason">→ ${result.reason}</span>`
+        : ''}
+      <span class="v-latency">${result.latency_ms ? result.latency_ms.toFixed(1) + 'ms' : ''}</span>
+    `;
+    list.insertBefore(entry, list.firstChild);
+  }
+
+  // Poll for state changes (catches Nova Act-driven updates)
+  async function pollVerdicts() {
+    try {
+      const res = await fetch('/api/verdicts');
+      const data = await res.json();
+      if (data.invoices) renderInvoices(data.invoices);
+      if (data.verdicts && data.verdicts.length) {
+        const list = document.getElementById('verdict-list');
+        const empty = document.getElementById('empty-state');
+        if (empty) empty.remove();
+        list.innerHTML = '';
+        for (const v of [...data.verdicts].reverse()) {
+          const verdictClass = v.permitted ? 'v-permitted' : 'v-rejected';
+          const verdictText  = v.permitted ? 'PERMITTED' : 'REJECTED';
+          const entry = document.createElement('div');
+          entry.className = 'verdict-entry';
+          entry.innerHTML = `
+            <span class="v-time">${v.time || ''}</span>
+            <span class="${verdictClass}">${verdictText}</span>
+            <span class="v-agent">${v.agent || '—'}</span>
+            <span class="v-action">${v.action || ''}('${v.invoice_id || ''}', ${v.amount || ''})</span>
+            ${v.reason && v.reason !== 'permitted'
+              ? `<span class="v-reason">→ ${v.reason}</span>`
+              : ''}
+            <span class="v-latency">${v.latency_ms ? v.latency_ms.toFixed(1) + 'ms' : ''}</span>
+          `;
+          list.appendChild(entry);
+        }
+      }
+    } catch (_) {}
+  }
+
+  loadInvoices();
+  setInterval(pollVerdicts, 800);
+</script>
+
+</body>
+</html>

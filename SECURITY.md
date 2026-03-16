@@ -24,7 +24,7 @@ The following are intentionally absent from the public codebase:
 
 Please do **not** open a public GitHub issue for security vulnerabilities.
 
-Report to: **security@mirroros.dev** (or substitute your contact address here before publishing)
+Report to: **security@strikaris.com**
 
 Include:
 - A description of the vulnerability
