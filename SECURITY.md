@@ -24,7 +24,7 @@ The following are intentionally absent from the public codebase:
 
 Please do **not** open a public GitHub issue for security vulnerabilities.
 
-Report to: **security@strikaris.com**
+Report to: **strikaris@outlook.com**
 
 Include:
 - A description of the vulnerability
@@ -37,5 +37,6 @@ You will receive a response within 72 hours. We will coordinate a fix and disclo
 
 | Version | Supported |
 |---------|-----------|
-| `main` branch | Yes |
-| Tagged releases | Current release only |
+| `main` branch | Yes — tagged releases |
+| `develop` branch | Yes — active development |
+| Older tagged releases | No |
