@@ -1,12 +1,22 @@
 # MirrorOS
 
-> Every AI agent action — proven before it executes, sealed after. Formal logic, not prompts.
+> Formal verification gate for AI agents. Every action proven before it executes, sealed after.
 
-MirrorOS is an open-source governance substrate for agentic AI systems. Before any agent touches a system, MirrorOS runs a dual gate: SWI-Prolog behavioral verification and Z3 formal proof. Decisions are sealed in a tamper-proof audit trail. The framework is public. The compliance expertise is the product.
+MirrorOS is an open-source governance substrate for agentic AI systems. Before any agent touches a system, MirrorOS runs a dual gate: SWI-Prolog behavioral verification and Z3 formal proof. If both gates pass, the action executes. If either gate fails, the action is blocked. The verdict is deterministic: no temperature, no hallucination, no prompt injection.
 
 ```bash
 git clone https://github.com/Strikaris-Tech/mirroros-core && cd mirroros-core && bash quickstart.sh
 ```
+
+---
+
+## Why This Exists
+
+Current AI agent safety is vibes-based. Guardrails are prompts. Prompts drift. A sufficiently clever input, a model update, or a long enough context window eventually gets through.
+
+MirrorOS takes a different approach: treat agent authorization as a formal logic problem, not a language problem. Prolog defines what agents are allowed to do. Z3 proves that a given action is structurally consistent with those rules. Neither gate can be sweet-talked.
+
+This is not novel in theory. Formal verification has been used in hardware and safety-critical software for decades. MirrorOS applies it to the agent action layer.
 
 ---
 
@@ -15,51 +25,59 @@ git clone https://github.com/Strikaris-Tech/mirroros-core && cd mirroros-core &&
 ```
 Agent declares intent
         ↓
-Gate 1 — Prolog (behavioral):  Does this action violate any Codex law?
-Gate 2 — Z3 (structural):      Is this action formally consistent with the axioms?
+Gate 1: Prolog (behavioral) -- Does this action violate any defined rule?
+Gate 2: Z3 (structural)     -- Is this action formally consistent with the axioms?
         ↓
-PERMITTED → Nova Act executes → decision sealed in ledger
-REJECTED  → Nova Act blocked  → violation sealed in ledger
+PERMITTED: action executes, decision sealed in ledger
+REJECTED:  action blocked,  violation sealed in ledger
 ```
 
-Both gates must pass. Either gate can block. The verdict is deterministic — no temperature, no hallucination, no prompt injection.
+Both gates must pass. Either gate can block. The sealed ledger entry is cryptographically verifiable: you can prove after the fact exactly what was permitted, what was rejected, and why.
 
-**Authority hierarchy — never inverted:**
+**Authority hierarchy:**
 ```
-Prolog (Law) → Z3 (Verification) → Python (Bridge) → Agents (Action)
+Prolog (Law) -> Z3 (Verification) -> Python (Bridge) -> Agents (Action)
 ```
-
-For the full architecture breakdown, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ---
 
-## Demos
-
-### 1. LedgerLark AP Orchestration (`examples/ledgerlark_demo/`)
-
-LedgerLark (overseer agent) governs an accounts payable queue. Every expense passes two MRS gates: a routing gate (which agent handles it?) and an approval gate (is the agent authorized?). Nova Act records approved expenses in Zoho Books. Rejected vendors never reach the browser.
-
-| Expense | Vendor | Result | Route |
-|---------|--------|--------|-------|
-| $450 | Office Supplies Co | PERMITTED | → clerk |
-| $8,500 | Cloud Infra Ltd | PERMITTED | → auditor |
-| $300 | Unknown Vendor Co | REJECTED | blocked at routing gate |
-| $15,000 | Strikaris Dev Services | PERMITTED | → auditor |
+## Run the Demo (no API key needed)
 
 ```bash
-export NOVA_ACT_API_KEY=<key>
-python examples/ledgerlark_demo/ap_demo.py
-python examples/ledgerlark_demo/ap_demo.py --no-browser  # terminal only
+docker compose up -d
+docker compose exec -w /app forge python examples/ledgerlark_demo/ap_demo.py --no-browser
 ```
 
-### 2. Governed Invoice Approval (`examples/accounting_demo/`)
+LedgerLark is an accounts payable orchestrator. It routes expense bills through two MRS gates: a routing gate (which agent handles this?) and an approval gate (is that agent authorized for this amount?). Unknown vendors are blocked at the routing gate and never reach execution.
 
-Invoice approval with a live UI. Clerk and auditor agents, MRS-gated approvals, real-time verdict panel in the browser.
+Sample output:
+
+```
+Expense 3/4  --  BILL-003  |  Unknown Vendor Co  |  $300
+  Gate 1: routing
+  Prolog    REJECTED  (0.8ms)
+
+  REJECTED  ledgerlark  route_bill('BILL-003', 300, unknown_co)
+  -> unapproved_vendor
+  Ledger    sealed  key=mrs:ap_20260421_003_route  tx=13
+
+  Nova Act  blocked -- browser untouched
+```
+
+The rejected vendor never reaches the browser. The violation is sealed in the ledger.
+
+---
+
+## Verify a Decision
+
+Every sealed decision can be independently verified:
 
 ```bash
-python examples/accounting_demo/server.py       # terminal 1
-python examples/accounting_demo/nova_demo.py    # terminal 2
+python -m ledger.verify ap_20260421_001_route
+# Returns: { "verified": true, "tx": 3, "key": "mrs:ap_20260421_001_route" }
 ```
+
+`verified: true` means the Merkle proof matches the tree root. The record has not been altered since it was written.
 
 ---
 
@@ -67,63 +85,32 @@ python examples/accounting_demo/nova_demo.py    # terminal 2
 
 | Path | Purpose |
 |------|---------|
-| `mrs/prolog/Codex_Laws.pl` | Core Codex — fifteen axioms governing all agent actions |
-| `mrs/prolog/concordance.pl` | Z3↔Prolog drift prevention — loaded at boot, boot fails on drift |
+| `mrs/prolog/Codex_Laws.pl` | Core Codex: fifteen axioms governing all agent actions |
+| `mrs/prolog/concordance.pl` | Z3 and Prolog drift prevention: boot fails on drift |
 | `mrs/prolog/Agent_Rules.pl` | Agent identities: LedgerLark, clerk, auditor, courier |
 | `mrs/bridge/mrs_bridge.py` | Dual-gate bridge: Prolog behavioral + Z3 structural |
-| `mrs/verifier/verify_codex.py` | Z3 formal verification engine + `ProofArtifact` |
-| `ledger/immudb_client.py` | immudb client — cryptographically sealed decision trail |
-| `ledger/verify.py` | CLI verification — `python -m ledger.verify <action_id>` |
+| `mrs/verifier/verify_codex.py` | Z3 formal verification engine + ProofArtifact |
+| `ledger/immudb_client.py` | immudb client: cryptographically sealed decision trail |
+| `ledger/verify.py` | CLI verification |
 | `forge/api.py` | FastAPI: agent routing, MRS endpoints, WebSocket pulse stream |
 | `adapters/` | Mock adapters for banking, CI/CD, accounting |
 | `examples/ledgerlark_demo/` | AP orchestration: LedgerLark dual-gate routing |
-| `examples/accounting_demo/` | Invoice approval: clerk/auditor governance |
+| `examples/accounting_demo/` | Invoice approval: clerk and auditor governance with live UI |
 
 ---
 
 ## Prerequisites
 
-**Docker is all you need** — Python and SWI-Prolog run inside the container.
+Docker is all you need. Python and SWI-Prolog run inside the container.
 
-Nova Act browser automation is the only thing that runs on the host (it controls a real browser). For those demos you also need:
+Nova Act browser automation is optional (controls a real browser for the full demo). For the browser path you also need:
+
 ```bash
 pip install nova-act
 export NOVA_ACT_API_KEY=<key>
 ```
 
----
-
-## Quickstart
-
-```bash
-bash quickstart.sh
-```
-
-Brings up Forge + immudb, runs 5 governed pulses, prints PERMITTED / REJECTED verdicts with latency. Docker only.
-
----
-
-## Running the Demos
-
-**Start services first:**
-```bash
-docker compose up -d
-```
-
-**LedgerLark AP Orchestration** — terminal only, no API key needed:
-```bash
-docker compose exec -w /app forge python examples/ledgerlark_demo/ap_demo.py --no-browser
-```
-
-**LedgerLark AP Orchestration** — with Nova Act (runs on host, controls browser):
-```bash
-python examples/ledgerlark_demo/ap_demo.py
-```
-
-**Invoice Approval UI** — no API key needed, open `http://localhost:7242`:
-```bash
-docker compose exec -w /app forge python examples/accounting_demo/server.py
-```
+The `--no-browser` flag runs the full logic path without it.
 
 ---
 
@@ -134,20 +121,18 @@ docker compose exec -w /app forge python examples/accounting_demo/server.py
 3. Load the module: `bridge.load_module("examples/<domain>/compliance.pl")`
 4. Gate actions: `bridge.query("violates_<domain>_policy(Agent, Action, Reason)")`
 
-The Codex is the law. Your domain rules extend it — they never replace it.
+The Codex is the base law. Domain rules extend it, they do not replace it.
 
 ---
 
-## Verify a Decision
+## Invoice Approval UI (second demo)
 
-Every sealed decision can be independently verified:
+Live UI with clerk and auditor agents, real-time verdict panel in the browser. No API key needed.
 
 ```bash
-python -m ledger.verify <action_id>
-# Returns: { "verified": true, "tx": ..., "key": ... }
+docker compose exec -w /app forge python examples/accounting_demo/server.py
+# Open http://localhost:7242
 ```
-
-`verified: true` means the Merkle proof matches the tree root. The record has not been altered since it was written.
 
 ---
 
