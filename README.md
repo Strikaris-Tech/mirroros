@@ -5,7 +5,7 @@
 MirrorOS is an open-source governance substrate for agentic AI systems. Before any agent touches a system, MirrorOS runs a dual gate: SWI-Prolog behavioral verification and Z3 formal proof. If both gates pass, the action executes. If either gate fails, the action is blocked. The verdict is deterministic: no temperature, no hallucination, no prompt injection.
 
 ```bash
-git clone https://github.com/Strikaris-Tech/mirroros-core && cd mirroros-core && bash quickstart.sh
+git clone https://github.com/Strikaris-Tech/mirroros && cd mirroros && bash quickstart.sh
 ```
 
 ---
@@ -70,14 +70,16 @@ The rejected vendor never reaches the browser. The violation is sealed in the le
 
 ## Verify a Decision
 
-Every sealed decision can be independently verified:
+Every sealed decision can be independently verified against the chain:
 
 ```bash
-python -m ledger.verify ap_20260421_001_route
-# Returns: { "verified": true, "tx": 3, "key": "mrs:ap_20260421_001_route" }
+curl http://localhost:7333/writ/ap_20260421_001_route
+# Returns: { "verified": true, "id": 3, "action_id": "ap_20260421_001_route" }
 ```
 
-`verified: true` means the Merkle proof matches the tree root. The record has not been altered since it was written.
+`verified: true` means the record exists and its hash matches the chain. It has not been altered since it was written.
+
+To run your own chain instance, see [strikaris-chain](https://github.com/Strikaris-Tech/strikaris-chain).
 
 ---
 
@@ -90,8 +92,7 @@ python -m ledger.verify ap_20260421_001_route
 | `mrs/prolog/Agent_Rules.pl` | Agent identities: LedgerLark, clerk, auditor, courier |
 | `mrs/bridge/mrs_bridge.py` | Dual-gate bridge: Prolog behavioral + Z3 structural |
 | `mrs/verifier/verify_codex.py` | Z3 formal verification engine + ProofArtifact |
-| `ledger/immudb_client.py` | immudb client: cryptographically sealed decision trail |
-| `ledger/verify.py` | CLI verification |
+| `ledger/chain_client.py` | strikaris-chain client: cryptographically sealed decision trail |
 | `forge/api.py` | FastAPI: agent routing, MRS endpoints, WebSocket pulse stream |
 | `adapters/` | Mock adapters for banking, CI/CD, accounting |
 | `examples/ledgerlark_demo/` | AP orchestration: LedgerLark dual-gate routing |
