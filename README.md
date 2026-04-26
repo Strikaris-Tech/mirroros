@@ -24,10 +24,10 @@ This is not novel in theory. Formal verification has been used in hardware and s
 
 ```
 Agent declares intent
-        ↓
+        |
 Gate 1: Prolog (behavioral) -- Does this action violate any defined rule?
 Gate 2: Z3 (structural)     -- Is this action formally consistent with the axioms?
-        ↓
+        |
 PERMITTED: action executes, decision sealed in ledger
 REJECTED:  action blocked,  violation sealed in ledger
 ```
@@ -41,62 +41,43 @@ Prolog (Law) -> Z3 (Verification) -> Python (Bridge) -> Agents (Action)
 
 ---
 
-## Run the Demo (no API key needed)
-
-```bash
-docker compose up -d
-docker compose exec -w /app forge python examples/ledgerlark_demo/ap_demo.py --no-browser
-```
-
-LedgerLark is an accounts payable orchestrator. It routes expense bills through two MRS gates: a routing gate (which agent handles this?) and an approval gate (is that agent authorized for this amount?). Unknown vendors are blocked at the routing gate and never reach execution.
-
-Sample output:
-
-```
-Expense 3/4  --  BILL-003  |  Unknown Vendor Co  |  $300
-  Gate 1: routing
-  Prolog    REJECTED  (0.8ms)
-
-  REJECTED  ledgerlark  route_bill('BILL-003', 300, unknown_co)
-  -> unapproved_vendor
-  Ledger    sealed  key=mrs:ap_20260421_003_route  tx=13
-
-  Nova Act  blocked -- browser untouched
-```
-
-The rejected vendor never reaches the browser. The violation is sealed in the ledger.
-
----
-
-## Verify a Decision
-
-Every sealed decision can be independently verified against the chain:
-
-```bash
-curl http://localhost:7333/writ/ap_20260421_001_route
-# Returns: { "verified": true, "id": 3, "action_id": "ap_20260421_001_route" }
-```
-
-`verified: true` means the record exists and its hash matches the chain. It has not been altered since it was written.
-
-To run your own chain instance, see [strikaris-chain](https://github.com/Strikaris-Tech/strikaris-chain).
-
----
-
 ## What's in This Repo
 
 | Path | Purpose |
 |------|---------|
 | `mrs/prolog/Codex_Laws.pl` | Core Codex: fifteen axioms governing all agent actions |
 | `mrs/prolog/concordance.pl` | Z3 and Prolog drift prevention: boot fails on drift |
-| `mrs/prolog/Agent_Rules.pl` | Agent identities: LedgerLark, clerk, auditor, courier |
+| `mrs/prolog/Agent_Rules.pl` | Agent identity and role definitions |
 | `mrs/bridge/mrs_bridge.py` | Dual-gate bridge: Prolog behavioral + Z3 structural |
 | `mrs/verifier/verify_codex.py` | Z3 formal verification engine + ProofArtifact |
 | `ledger/chain_client.py` | strikaris-chain client: cryptographically sealed decision trail |
 | `forge/api.py` | FastAPI: agent routing, MRS endpoints, WebSocket writ stream |
 | `adapters/` | Mock adapters for banking, CI/CD, accounting |
-| `examples/ledgerlark_demo/` | AP orchestration: LedgerLark dual-gate routing |
-| `examples/accounting_demo/` | Invoice approval: clerk and auditor governance with live UI |
+
+---
+
+## Ledger
+
+MirrorOS seals every decision as a writ on [strikaris-chain](https://github.com/Strikaris-Tech/strikaris-chain). To run your own chain instance:
+
+```bash
+git clone https://github.com/Strikaris-Tech/strikaris-chain && cd strikaris-chain && docker compose up -d
+```
+
+Set `CHAIN_URL` in your env to point MirrorOS at it. Without a chain running, decisions are still logged to JSON locally.
+
+---
+
+## Verify a Decision
+
+Every sealed decision can be independently verified:
+
+```bash
+curl http://localhost:7333/writ/<action_id>
+# Returns: { "verified": true, "id": 3, "action_id": "..." }
+```
+
+`verified: true` means the record exists and its hash matches the chain. It has not been altered since it was written.
 
 ---
 
@@ -104,36 +85,16 @@ To run your own chain instance, see [strikaris-chain](https://github.com/Strikar
 
 Docker is all you need. Python and SWI-Prolog run inside the container.
 
-Nova Act browser automation is optional (controls a real browser for the full demo). For the browser path you also need:
-
-```bash
-pip install nova-act
-export NOVA_ACT_API_KEY=<key>
-```
-
-The `--no-browser` flag runs the full logic path without it.
-
 ---
 
 ## Adding Your Own Domain
 
 1. Add agent facts to `mrs/prolog/Agent_Rules.pl`
-2. Write domain compliance rules in `examples/<domain>/compliance.pl`
-3. Load the module: `bridge.load_module("examples/<domain>/compliance.pl")`
+2. Write domain compliance rules in a new `.pl` file
+3. Load the module: `bridge.load_module("path/to/compliance.pl")`
 4. Gate actions: `bridge.query("violates_<domain>_policy(Agent, Action, Reason)")`
 
 The Codex is the base law. Domain rules extend it, they do not replace it.
-
----
-
-## Invoice Approval UI (second demo)
-
-Live UI with clerk and auditor agents, real-time verdict panel in the browser. No API key needed.
-
-```bash
-docker compose exec -w /app forge python examples/accounting_demo/server.py
-# Open http://localhost:7242
-```
 
 ---
 
