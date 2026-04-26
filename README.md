@@ -93,7 +93,7 @@ To run your own chain instance, see [strikaris-chain](https://github.com/Strikar
 | `mrs/bridge/mrs_bridge.py` | Dual-gate bridge: Prolog behavioral + Z3 structural |
 | `mrs/verifier/verify_codex.py` | Z3 formal verification engine + ProofArtifact |
 | `ledger/chain_client.py` | strikaris-chain client: cryptographically sealed decision trail |
-| `forge/api.py` | FastAPI: agent routing, MRS endpoints, WebSocket pulse stream |
+| `forge/api.py` | FastAPI: agent routing, MRS endpoints, WebSocket writ stream |
 | `adapters/` | Mock adapters for banking, CI/CD, accounting |
 | `examples/ledgerlark_demo/` | AP orchestration: LedgerLark dual-gate routing |
 | `examples/accounting_demo/` | Invoice approval: clerk and auditor governance with live UI |
@@ -145,7 +145,7 @@ Apache 2.0. Free to use, modify, and distribute. See [LICENSE](LICENSE).
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Issues labelled `good-first-pulse` are a good starting point.
+See [CONTRIBUTING.md](CONTRIBUTING.md). Issues labelled `good-first-issue` are a good starting point.
 
 ## Security
 
