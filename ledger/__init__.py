@@ -1,13 +1,11 @@
 """
-MirrorOS Ledger — cryptographically sealed decision trail via immudb.
+MirrorOS Ledger -- writ client for strikaris-chain.
 
 Exports:
-    MRSLedger    — write verified entries to immudb
-
-verify_entry is available via ledger.verify or the CLI:
-    python -m ledger.verify <action_id>
+    MRSLedger   -- seals MRS decisions as writs on strikaris-chain
+    ChainClient -- same class, explicit name
 """
 
-from .immudb_client import MRSLedger
+from .chain_client import ChainClient, MRSLedger
 
-__all__ = ["MRSLedger"]
+__all__ = ["ChainClient", "MRSLedger"]
