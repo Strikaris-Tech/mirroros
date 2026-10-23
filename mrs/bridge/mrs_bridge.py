@@ -26,9 +26,9 @@ except ImportError:
     VerificationLevel = None
     VerificationStatus = None
 
-# immudb ledger (optional — MRS operates without it)
+# strikaris-chain ledger (optional — MRS operates without it)
 try:
-    from ledger.immudb_client import MRSLedger
+    from ledger.chain_client import MRSLedger
 
     LEDGER_AVAILABLE = True
 except ImportError:
@@ -93,7 +93,7 @@ class MRSBridge:
         self.bridge_log_path = self.memory_path / "bridge.log"
         self.outcomes_log_path = self.memory_path / "outcomes.json"
 
-        # immudb ledger (optional)
+        # strikaris-chain ledger (optional)
         self.ledger = ledger
 
         # Action ID counter for generating unique IDs
@@ -977,7 +977,7 @@ class MRSBridge:
         except Exception as e:
             self.logger.error(f"Failed to write reasoning log: {e}", exc_info=True)
 
-        # Seal in immudb (optional — non-blocking, never raises)
+        # Seal in strikaris-chain (optional — non-blocking, never raises)
         if self.ledger is not None:
             try:
                 seal_result = self.ledger.seal(log_entry)
